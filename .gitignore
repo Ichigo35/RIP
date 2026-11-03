@@ -6,3 +6,6 @@ plan/out/*.html
 node_modules/
 .env*
 .DS_Store
+.dev.vars
+web/node_modules/
+web/.wrangler/
