@@ -13,7 +13,16 @@ conversations Claude Code.
 | --- | --- | --- | --- | --- |
 | 0. Idée et plan illustré | 2026-11-03 | 10:28 → 10:47 | ~19 min | Concept, étude de marché, plan en 11 planches, journal + dépôt GitHub |
 | 0b. Renommage en RIP | 2026-11-03 | 10:49 → 10:53 | ~4 min | Nom officiel « RIP », planches et document mis à jour |
-| 1. Site web : accueil + « Enterre ton projet » | 2026-11-03 | 10:55 → 11:04 | ~9 min | Site Cloudflare + base Neon en ligne et testé : https://rip.ichigo35.workers.dev |
+| 1. Site web : accueil + « Enterre ton projet » | 2026-11-03 | 10:55 → 11:04 | ~9 min | Site Cloudflare + base Neon en ligne et testé : https://rip.ichigo35.workers.dev (**en attente de la confirmation de l'utilisateur**) |
+
+**Total au 2026-11-03 11:05 : 37 minutes** entre la première demande (10:28) et le site en ligne. Modèle : Opus 5.5 (effort élevé) jusqu'à 10:48, puis Sonnet 5.5 (effort moyen) à partir de 10:48, changement fait par l'utilisateur.
+
+## État actuel (2026-11-03 11:05)
+
+- Phase 0 et phase 1 terminées ; **la phase 1 attend la confirmation de l'utilisateur** avant de passer à la phase 2.
+- Phase 2 proposée (pas commencée) : comptes, swipe sur les tombes, match.
+- Décisions ouvertes : domaine et marque RIP, renommer le dossier local, interface en anglais en plus du français, premiers projets à enterrer.
+- Dernier commit poussé avant cette mise à jour : `f2e0bdd`.
 
 ---
 
@@ -140,15 +149,15 @@ et une liste d'attente pour les repreneurs. Pas encore de swipe ni de match (pha
 | Heure | Étape | Outils |
 | --- | --- | --- |
 | 10:55 | Vérification de l'environnement (Node 26, wrangler 4.156) | Bash |
-| 10:56 | Maquette Stitch demandée (page d'accueil bureau) : **délai dépassé, aucune maquette reçue après 10 min** ; le site est donc construit à partir de la charte déjà validée dans les planches | MCP Stitch |
-| 10:56 | Création de la base : projet Neon `rip` (région Singapour, Postgres 17), puis 2 tables `burials` (tombes) et `resurrectors` (repreneurs) avec contraintes | MCP Neon |
+| 10:55 | Maquette Stitch demandée (page d'accueil bureau, 10:55:51) : **la génération a expiré** et la liste des écrans est restée vide à 10:57 et à 11:00 (environ 5 minutes d'attente) ; le site est donc construit à partir de la charte déjà validée dans les planches | MCP Stitch |
+| 10:55 | Création de la base (lancée en même temps que Stitch, 10:55:52) : projet Neon `rip` (région Singapour, Postgres 17), puis 2 tables `burials` (tombes) et `resurrectors` (repreneurs) avec contraintes | MCP Neon |
 | 10:57 | Installation du projet `web/` : conflit de versions npm (wrangler 4.156 exige workers-types 5.x) corrigé | npm |
 | 10:58 | API Worker (`web/src/index.ts`) : liste publique du cimetière, enterrement, inscription des repreneurs, anti-robots (champ piège, limite 6 envois par heure et par IP hachée, contrôle d'origine) | TypeScript, Cloudflare Workers, @neondatabase/serverless |
 | 10:59 | Page (`web/public/` : index.html, style.css, app.js) : accueil, 4 étapes, 3 gestes, cimetière en direct, formulaire avec aperçu de la tombe en direct, inscription repreneurs | HTML/CSS/JS sans framework |
-| 11:00 | Tests réels dans Chrome (bureau 1360 px et mobile 390 px) : validation, envoi, affichage de la tombe, inscription ; aucune erreur console, aucun débordement | Playwright |
-| 11:01 | Déploiement : https://rip.ichigo35.workers.dev ; pose du secret `DATABASE_URL` **refusée par le garde-fou** (écriture de secret) → à lancer par l'utilisateur | wrangler |
+| 10:59 | Tests réels dans Chrome (bureau 1360 px et mobile 390 px) : validation, envoi, affichage de la tombe, inscription ; aucune erreur console, aucun débordement | Playwright |
+| 11:00 | Déploiement : https://rip.ichigo35.workers.dev ; pose du secret `DATABASE_URL` **refusée par le garde-fou** (écriture de secret) → à lancer par l'utilisateur | wrangler |
 | 11:02 | Correctif de contraste (texte blanc sur vert à 4,0:1) : vert des boutons foncé de `#3F8F3A` à `#2A7326` (≈ 5,8:1), redéploiement | détecteur impeccable, wrangler |
-| 11:03 | Première commande de secret sans effet visible (liste de secrets vide, API en erreur 1101) ; relancée par l'utilisateur avec la sortie affichée : « Success! Uploaded secret DATABASE_URL » | wrangler |
+| 11:03 | L'utilisateur lance la commande du secret (11:03:18). Mon contrôle, parti 3 secondes plus tard, voyait encore une liste vide et l'API en erreur 1101 ; l'utilisateur l'a relancée (11:03:41) et la sortie affichée dit « Success! Uploaded secret DATABASE_URL » | wrangler |
 | 11:04 | Test du site en ligne (parcours complet, bureau et mobile, 0 erreur), suppression des données de test, clôture de la phase | Playwright, Neon |
 
 ### Les choix faits
@@ -164,7 +173,8 @@ et une liste d'attente pour les repreneurs. Pas encore de swipe ni de match (pha
 | Tombe affichée publiquement seulement avec consentement ; e-mail jamais affiché | Claude | Vie privée |
 | Aperçu de la tombe en direct pendant la saisie | Claude | Donne envie de finir le formulaire |
 | Pas d'envoi d'e-mail pour l'instant | Claude | Pas de domaine ; l'e-mail est seulement collecté |
-| Maquette Stitch abandonnée après dépassement de délai | Claude | Ne pas bloquer la phase ; la charte des planches fait office de maquette |
+| Maquette Stitch abandonnée après dépassement de délai (~5 min) | Claude | Ne pas bloquer la phase ; la charte des planches fait office de maquette |
+| Passage d'Opus 5.5 (effort élevé) à Sonnet 5.5 (effort moyen), à 10:48 | **Utilisateur** (commandes `/model` et `/effort`) | Modèle plus rapide pour la construction du site |
 
 ### Moments à garder pour la vidéo
 
@@ -173,7 +183,7 @@ et une liste d'attente pour les repreneurs. Pas encore de swipe ni de match (pha
 - Le garde-fou de sécurité a refusé que l'agent écrive le secret de la base sur Cloudflare : c'est l'utilisateur qui lance la commande.
 - Les données de test (1 tombe, 1 repreneur) ont été supprimées de la base, deux fois (en local puis en ligne) ; elle est revenue à zéro.
 - Le détecteur de qualité a trouvé un vrai défaut de contraste sur les boutons verts : corrigé en fonçant le vert du site.
-- La commande qui pose le secret a d'abord semblé réussir sans effet : il a fallu vérifier (`wrangler secret list` vide, API en erreur 1101) puis la relancer en voyant sa sortie.
+- Le secret : mon premier contrôle est arrivé trop tôt (3 secondes après la commande) et a fait croire à un échec ; la commande relancée avec sa sortie visible a confirmé le succès. Leçon : laisser le temps à la commande, ou demander la sortie, avant de conclure.
 
 ### Résultat
 
