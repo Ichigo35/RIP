@@ -30,6 +30,7 @@ L'utilisateur fera une vidéo de toutes les étapes de création de l'app. Donc,
 ## Façon de travailler
 
 - Par phases : terminer une phase, s'arrêter, attendre que l'utilisateur dise de continuer.
+- Chaque fin de phase : demander à l'utilisateur de confirmer avant de continuer (demandé le 2026-11-03).
 - Stack : Cloudflare (Workers, R2, Durable Objects, `wrangler`) + Neon. Jamais Vercel ni Supabase.
 - UI/UX : maquettes avec MCP Stitch avant de coder un écran (règle globale) ; charte du plan à reprendre :
   granit clair `#E4E4DF`, granit noir `#232428` + dorure `#C9A65A`, mauve chrysanthème `#8A2D78` (fleurs),
@@ -41,6 +42,6 @@ L'utilisateur fera une vidéo de toutes les étapes de création de l'app. Donc,
 - **Nom** : RIP depuis le 2026-11-03 (avant : Reboot).
 - **Phase 0 — Idée et plan illustré** : terminée le 2026-11-03 (~19 min). Concept, étude de marché (6 concurrents,
   aucun ne combine cimetière + swipe + match), plan en 11 planches, journal de bord, dépôt GitHub.
-- **Décisions en attente** (utilisateur) : domaine/marque RIP, renommer ou non le dossier local, langue FR + EN, PWA d'abord ou Flutter, 2-3 projets
-  personnels comme premières tombes, feu vert pour la phase suivante (page d'accueil + formulaire « Enterre ton
-  projet », validation sans coder).
+- **Phase 1 — Site web (accueil + formulaire « Enterre ton projet »)** : terminée le 2026-11-03 (~9 min). En ligne : https://rip.ichigo35.workers.dev (Worker `rip`, base Neon `rip` / `empty-lab-37729650`, code dans `web/`). Version web uniquement pour l'instant (smartphone plus tard, décision de l'utilisateur). Déploiement : `cd web && npm run deploy` ; secret `DATABASE_URL` à poser par l'utilisateur (`! … wrangler secret put`), l'agent n'a pas le droit. Test local : `web/.dev.vars` (ignoré par git) + `npx wrangler dev`. Données de test à supprimer après chaque essai (emails `@example.com`).
+- **Décisions en attente** (utilisateur) : domaine/marque RIP, renommer ou non le dossier local, langue FR + EN (le site est en français pour l'instant), 2-3 projets
+  personnels comme premières tombes, confirmation de fin de phase 1 et feu vert pour la phase 2 (à définir avec l'utilisateur : comptes + swipe + match).

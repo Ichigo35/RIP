@@ -13,7 +13,7 @@ conversations Claude Code.
 | --- | --- | --- | --- | --- |
 | 0. Idée et plan illustré | 2026-11-03 | 10:28 → 10:47 | ~19 min | Concept, étude de marché, plan en 11 planches, journal + dépôt GitHub |
 | 0b. Renommage en RIP | 2026-11-03 | 10:49 → 10:53 | ~4 min | Nom officiel « RIP », planches et document mis à jour |
-| 1. Site web : accueil + « Enterre ton projet » | 2026-11-03 | 10:55 → en cours | — | Site Cloudflare + base Neon, en ligne sur https://rip.ichigo35.workers.dev (en attente du secret de base) |
+| 1. Site web : accueil + « Enterre ton projet » | 2026-11-03 | 10:55 → 11:04 | ~9 min | Site Cloudflare + base Neon en ligne et testé : https://rip.ichigo35.workers.dev |
 
 ---
 
@@ -147,6 +147,9 @@ et une liste d'attente pour les repreneurs. Pas encore de swipe ni de match (pha
 | 10:59 | Page (`web/public/` : index.html, style.css, app.js) : accueil, 4 étapes, 3 gestes, cimetière en direct, formulaire avec aperçu de la tombe en direct, inscription repreneurs | HTML/CSS/JS sans framework |
 | 11:00 | Tests réels dans Chrome (bureau 1360 px et mobile 390 px) : validation, envoi, affichage de la tombe, inscription ; aucune erreur console, aucun débordement | Playwright |
 | 11:01 | Déploiement : https://rip.ichigo35.workers.dev ; pose du secret `DATABASE_URL` **refusée par le garde-fou** (écriture de secret) → à lancer par l'utilisateur | wrangler |
+| 11:02 | Correctif de contraste (texte blanc sur vert à 4,0:1) : vert des boutons foncé de `#3F8F3A` à `#2A7326` (≈ 5,8:1), redéploiement | détecteur impeccable, wrangler |
+| 11:03 | Première commande de secret sans effet visible (liste de secrets vide, API en erreur 1101) ; relancée par l'utilisateur avec la sortie affichée : « Success! Uploaded secret DATABASE_URL » | wrangler |
+| 11:04 | Test du site en ligne (parcours complet, bureau et mobile, 0 erreur), suppression des données de test, clôture de la phase | Playwright, Neon |
 
 ### Les choix faits
 
@@ -168,7 +171,16 @@ et une liste d'attente pour les repreneurs. Pas encore de swipe ni de match (pha
 - Stitch n'a jamais rendu la maquette : le site est parti directement de la charte des planches.
 - Premier test sur mobile : le bloc « Ta tombe est creusée » s'affichait dès l'arrivée, car un `display:grid` écrasait l'attribut `hidden` ; trouvé grâce à la capture d'écran, corrigé en une ligne.
 - Le garde-fou de sécurité a refusé que l'agent écrive le secret de la base sur Cloudflare : c'est l'utilisateur qui lance la commande.
-- Les données de test (1 tombe, 1 repreneur) ont été supprimées de la base ; elle est revenue à zéro.
+- Les données de test (1 tombe, 1 repreneur) ont été supprimées de la base, deux fois (en local puis en ligne) ; elle est revenue à zéro.
+- Le détecteur de qualité a trouvé un vrai défaut de contraste sur les boutons verts : corrigé en fonçant le vert du site.
+- La commande qui pose le secret a d'abord semblé réussir sans effet : il a fallu vérifier (`wrangler secret list` vide, API en erreur 1101) puis la relancer en voyant sa sortie.
+
+### Résultat
+
+- Site en ligne : https://rip.ichigo35.workers.dev (Worker `rip`), base Neon `rip` (`empty-lab-37729650`).
+- Code : `web/` (`src/index.ts`, `public/`), commandes `npm run dev`, `npm run check`, `npm run deploy` (depuis `web/`).
+- Secret `DATABASE_URL` sur le Worker (posé par l'utilisateur) ; copie locale dans `web/.dev.vars` (ignoré par git).
+- Pas encore : e-mails envoyés, domaine propre, swipe, comptes.
 
 ### Outils et technos
 
