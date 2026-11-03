@@ -11,7 +11,7 @@ conversations Claude Code.
 
 | Phase | Date | Début → fin | Durée | Résultat |
 | --- | --- | --- | --- | --- |
-| 0. Idée et plan illustré | 2026-11-03 | 10:28 → 10:52 | ~24 min | Concept, étude de marché, plan en 11 planches, journal + dépôt GitHub |
+| 0. Idée et plan illustré | 2026-11-03 | 10:28 → 10:47 | ~19 min | Concept, étude de marché, plan en 11 planches, journal + dépôt GitHub |
 
 ---
 
@@ -39,7 +39,7 @@ mémoire à chaque fin de phase et pousser sur https://github.com/Ichigo35/Reboo
 | 10:35 | 6 min | Écriture du générateur des 11 planches illustrées (HTML) | Node.js, `plan/build.mjs` |
 | 10:41 | 3 min | Premier rendu, relecture image par image, 3 passes de corrections | Playwright + Google Chrome (×2), sips |
 | 10:43 | 2 min | Envoi des 11 images dans le document, remplissage des 11 sections restantes | Artifact (assets), Claude Docs |
-| 10:45 | 7 min | Journal de bord, CLAUDE.md, mémoire, archive de la conversation, premier commit + push | git, gh, GitHub |
+| 10:45 | 2 min | Journal de bord, CLAUDE.md, mémoire, archive de la conversation, premier commit + push | git, gh, GitHub |
 
 ### Le plan produit
 

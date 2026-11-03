@@ -38,7 +38,7 @@ L'utilisateur fera une vidéo de toutes les étapes de création de l'app. Donc,
 
 ## Avancement
 
-- **Phase 0 — Idée et plan illustré** : terminée le 2026-11-03 (~24 min). Concept, étude de marché (6 concurrents,
+- **Phase 0 — Idée et plan illustré** : terminée le 2026-11-03 (~19 min). Concept, étude de marché (6 concurrents,
   aucun ne combine cimetière + swipe + match), plan en 11 planches, journal de bord, dépôt GitHub.
 - **Décisions en attente** (utilisateur) : nom Reboot, langue FR + EN, PWA d'abord ou Flutter, 2-3 projets
   personnels comme premières tombes, feu vert pour la phase suivante (page d'accueil + formulaire « Enterre ton
