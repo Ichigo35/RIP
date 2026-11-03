@@ -1,4 +1,4 @@
-# Journal de bord — Reboot
+# Journal de bord — RIP (ex-Reboot)
 
 Ce journal sert de matière première à la vidéo « making-of » de l'app : il garde chaque étape, son heure,
 sa durée, les choix faits (et par qui), et les outils utilisés. Il est tenu à jour par Claude à chaque étape
@@ -12,6 +12,7 @@ conversations Claude Code.
 | Phase | Date | Début → fin | Durée | Résultat |
 | --- | --- | --- | --- | --- |
 | 0. Idée et plan illustré | 2026-11-03 | 10:28 → 10:47 | ~19 min | Concept, étude de marché, plan en 11 planches, journal + dépôt GitHub |
+| 0b. Renommage en RIP | 2026-11-03 | 10:56 → 10:58 | ~2 min | Nom officiel « RIP », planches et document mis à jour |
 
 ---
 
@@ -57,7 +58,8 @@ Planches (dans `plan/out/`, générées par `plan/build.mjs`) : `reboot-cover`, 
 | Choix | Qui | Pourquoi |
 | --- | --- | --- |
 | Idée : un cimetière de projets abandonnés, swipe façon Tinder, reprise avec le créateur | Utilisateur | Idée de départ |
-| Nom de travail « Reboot » | Utilisateur (nom du dossier), à confirmer | Pistes de secours : Lazare, Second Souffle |
+| ~~Nom de travail « Reboot »~~ remplacé | Claude (proposition), puis changé | Nom du dossier ; pistes de secours : Lazare, Second Souffle |
+| **Nom de l'app : « RIP »**, signature « Reprise Immédiate Possible » (le « R.I.P. » ponctué n'est plus utilisé) | **Utilisateur** (10:56 : « j'aime bien le nom RIP, Reprise Immédiate Possible, renomme l'app ainsi ou du moins RIP si c'est trop long ») | Court, mémorable, le sens est dans le nom ; le repo GitHub et le dossier gardent « Reboot » pour l'instant |
 | Pas de code à ce stade, juste un plan | Utilisateur | « ne code rien » |
 | Vocabulaire funéraire bienveillant : enterrer, tombe, épitaphe, autopsie, héritage, testament, veillée, renaissance | Claude | Mémorable, drôle sans être glauque |
 | Signature « R.I.P. — Reprise Immédiate Possible » | Claude | Détourne le cliché du cimetière en promesse |
@@ -93,6 +95,8 @@ MVP à une équipe, à la main.
 
 ### Moments à garder pour la vidéo
 
+- 10:56 : l'utilisateur change le nom en cours de route, de Reboot à RIP. Sur la couverture, le logo passe de « Reboot » à un grand « RIP » ; seules 5 planches sur 11 portaient le nom, les 6 autres sont restées telles quelles.
+
 - Le premier rendu des planches avait des icônes géantes sur 3 planches (un sélecteur CSS `.mc svg` qui
   touchait aussi les icônes) : corrigé en `.mc > svg`.
 - L'écran « Il revit ! » sortait clair au lieu de granit noir (un raccourci CSS `background` effaçait la
@@ -102,7 +106,7 @@ MVP à une équipe, à la main.
 
 ### Décisions laissées à l'utilisateur
 
-- Garder le nom Reboot ? Vérifier domaine et marque.
+- Nom RIP décidé ; reste à vérifier domaine, marque et homonymes, et à décider si on renomme le dépôt GitHub et le dossier.
 - Langue : FR + EN dès le MVP (recommandé) ?
 - PWA d'abord (recommandé) ou Flutter natif ?
 - Fournir 2 ou 3 projets abandonnés personnels comme premières tombes.

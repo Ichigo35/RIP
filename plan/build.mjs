@@ -1,4 +1,4 @@
-// Planches du plan Reboot (cimetière à projets) : HTML -> Playwright x2 -> PNG -> JPEG (sips).
+// Planches du plan RIP (cimetière à projets) : HTML -> Playwright x2 -> PNG -> JPEG (sips).
 // Usage : node build.mjs [nom1 nom2 ...]   (sans argument : toutes les planches)
 import fs from 'fs';
 import path from 'path';
@@ -99,7 +99,7 @@ P.cover = () => `
 <style>
 .cv{display:grid;grid-template-columns:1fr 262px;gap:40px;align-items:center;padding:6px 4px 4px}
 .wm{display:flex;align-items:flex-end;gap:12px}
-.wm .d{font-size:92px;line-height:.82}
+.wm .d{font-size:120px;line-height:.8;letter-spacing:.07em}
 .tag{font-family:'Gloock',serif;font-size:28px;margin-top:22px;line-height:1.1}
 .tag .rip{display:block;font-size:17px;color:var(--gris);font-family:'Schibsted Grotesk';font-weight:600;letter-spacing:.06em;margin-bottom:6px}
 .tag b{color:var(--chrys);font-weight:400}
@@ -136,8 +136,8 @@ P.cover = () => `
 </style>
 <div class="cv">
   <div>
-    <div class="wm">${MARK(80)}<span class="d">Reboot</span></div>
-    <div class="tag"><span class="rip">R.I.P.</span><b>R</b>eprise <b>I</b>mmédiate <b>P</b>ossible</div>
+    <div class="wm">${MARK(80)}<span class="d">RIP</span></div>
+    <div class="tag"><b>R</b>eprise <b>I</b>mmédiate <b>P</b>ossible</div>
     <p class="lede">L'app où l'on enterre ses projets abandonnés, et où d'autres viennent les ressusciter avec leur créateur.</p>
     <div class="gs">
       <div class="g"><span class="bub b-green">${ico('sprout')}</span><span class="ar">${ico('arrow-right')}</span><div><b>Ressusciter</b><span>je veux reprendre ce projet</span></div></div>
@@ -467,7 +467,7 @@ P.marche = () => {
   <div class="axl" style="left:0;top:${Y0 + 2}px;width:108px;text-align:right">Projets abandonnés</div>
   <div class="axl" style="left:0;top:${Y0 + H - 18}px;width:108px;text-align:right">Projets vivants</div>
   ${dots.map(([x, y, n, s]) => `<div class="dt2" style="left:${px(x) - 6}px;top:${py(y) - 10}px"><i></i><div><b>${n}</b><span>${s}</span></div></div>`).join('')}
-  <div class="rb" style="left:${px(0.58)}px;top:${py(0.97)}px"><span class="bub b-green">${ico('sprout')}</span><div><b>Reboot</b><span>swipe + match avec le créateur</span></div></div>
+  <div class="rb" style="left:${px(0.58)}px;top:${py(0.97)}px"><span class="bub b-green">${ico('sprout')}</span><div><b>RIP</b><span>swipe + match avec le créateur</span></div></div>
 </div>
 <p class="note" style="margin-top:4px">Positions approximatives, d'après les pages des produits consultées le 3 novembre 2026.</p>`;
 };
@@ -476,7 +476,7 @@ P.marche = () => {
 P.argent = () => {
   const C = [
     ['gift', '0 €', 'Toujours gratuit', 'Enterrer un projet, recevoir des visites, 20 swipes par jour.', 'Phase 1', 'b-greenl'],
-    ['crown', '7 €<small> / mois</small>', 'Reboot+, pour les repreneurs', 'Swipes illimités, filtres par compétence, voir les fleurs, 3 priorités par semaine.', 'Phase 2', 'b-chrys'],
+    ['crown', '7 €<small> / mois</small>', 'RIP+, pour les repreneurs', 'Swipes illimités, filtres par compétence, voir les fleurs, 3 priorités par semaine.', 'Phase 2', 'b-chrys'],
     ['percent', '8 %', 'Commission sur les cessions', 'Paiement sous séquestre chez un prestataire, prélevé seulement si la vente aboutit.', 'Phase 3', 'b-grey'],
     ['building-2', '99 à 490 €<small> / mois</small>', 'Cimetières privés', 'Écoles, incubateurs et entreprises, pour leurs projets dormants.', 'Phase 3', 'b-grey'],
   ];
@@ -502,7 +502,7 @@ P.risques = () => {
     ['search', 'Cimetière vide', 'pas de tombes, pas de repreneurs', "Ouvrir d'abord les dépôts ; lancer le swipe à partir de 300 tombes ; campagnes « Enterre ton projet »."],
     ['ghost', 'Ghosting', 'des matchs sans suite', 'Veillée limitée à 14 jours ; taux de réponse affiché sur chaque profil.'],
     ['bot', 'Fausses tombes', 'projets vides ou arnaques', 'Preuve obligatoire (lien, capture, dépôt de code) ; modération par IA puis humaine.'],
-    ['scale', 'Litige de propriété', 'qui possède quoi après la reprise ?', "Testament choisi à l'avance ; pacte type par testament ; Reboot n'est pas partie à l'accord."],
+    ['scale', 'Litige de propriété', 'qui possède quoi après la reprise ?', "Testament choisi à l'avance ; pacte type par testament ; RIP n'est pas partie à l'accord."],
     ['database', 'Données des inscrits', 'les utilisateurs du projet ont des droits (RGPD)', "Aucun fichier clients transféré par l'app ; liste de contrôle RGPD dans le pacte."],
   ];
   return `
@@ -525,7 +525,7 @@ P.route = () => {
   const ph = [
     ['Phase 0', 'Valider sans coder', '3 semaines', ["Page d'accueil et formulaire « Enterre ton projet »", '20 entretiens', 'Appel dans 5 communautés']],
     ['Phase 1', 'MVP', '8 semaines', ['Enterrer, swiper, choisir', 'Match et messagerie', 'Modération et signalement']],
-    ['Phase 2', 'La reprise', '6 semaines', ['Coffre et pacte type', 'Renaissances, suivi à 90 jours', 'Reboot+ en test']],
+    ['Phase 2', 'La reprise', '6 semaines', ['Coffre et pacte type', 'Renaissances, suivi à 90 jours', 'RIP+ en test']],
     ['Phase 3', 'Croissance', 'en continu', ['Apps iOS et Android', 'Cessions sous séquestre', 'Cimetières privés, Resurrection Jam']],
   ];
   const gates = ['150 tombes et 500 repreneurs inscrits', '30 % des matchs dépassent 10 messages', '10 pactes signés'];

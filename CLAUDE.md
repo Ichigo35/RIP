@@ -1,8 +1,8 @@
-# Reboot — règles du projet
+# RIP — règles du projet (ex-Reboot)
 
 App où l'on « enterre » ses projets abandonnés pour que d'autres les ressuscitent : swipe façon Tinder sur
 des pierres tombales, match à double sens avec le créateur, veillée de 14 jours, pacte de reprise.
-Signature : « R.I.P. — Reprise Immédiate Possible ».
+Nom officiel : **RIP** = « Reprise Immédiate Possible » (choisi par l'utilisateur le 2026-11-03 ; le dossier et le dépôt GitHub s'appellent encore « Reboot »).
 
 - Dépôt : https://github.com/Ichigo35/Reboot (**public** : jamais de secret, de jeton ni de transcript brut)
 - Plan illustré (Claude Docs) : https://claude.ai/artifact/VxLnkZkt7tsi8bz63LzUcM
@@ -38,8 +38,9 @@ L'utilisateur fera une vidéo de toutes les étapes de création de l'app. Donc,
 
 ## Avancement
 
+- **Nom** : RIP depuis le 2026-11-03 (avant : Reboot).
 - **Phase 0 — Idée et plan illustré** : terminée le 2026-11-03 (~19 min). Concept, étude de marché (6 concurrents,
   aucun ne combine cimetière + swipe + match), plan en 11 planches, journal de bord, dépôt GitHub.
-- **Décisions en attente** (utilisateur) : nom Reboot, langue FR + EN, PWA d'abord ou Flutter, 2-3 projets
+- **Décisions en attente** (utilisateur) : domaine/marque RIP, renommer ou non le dépôt et le dossier, langue FR + EN, PWA d'abord ou Flutter, 2-3 projets
   personnels comme premières tombes, feu vert pour la phase suivante (page d'accueil + formulaire « Enterre ton
   projet », validation sans coder).
