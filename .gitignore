@@ -1,0 +1,8 @@
+# Conversations brutes (archive locale pour la vidéo, jamais publiées)
+.journal-brut/
+# Rendus intermédiaires des planches (les JPEG sont versionnés)
+plan/out/*.png
+plan/out/*.html
+node_modules/
+.env*
+.DS_Store
