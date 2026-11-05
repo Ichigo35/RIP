@@ -15,17 +15,17 @@ conversations Claude Code.
 | 0b. Renommage en RIP | 2026-11-03 | 10:49 → 10:53 | ~4 min | Nom officiel « RIP », planches et document mis à jour |
 | 1. Site web : accueil + « Enterre ton projet » | 2026-11-03 | 10:55 → 11:04 | ~9 min | Site Cloudflare + base Neon en ligne et testé : https://rip.ichigo35.workers.dev (confirmé par l'utilisateur le 2026-11-05) |
 | 2. Comptes, swipe, match | 2026-11-05 | 08:53 → 09:23 | ~30 min | Comptes, cimetière à swiper, file du créateur, écran « Il revit ! », en ligne et testé (confirmé par l'utilisateur à 09:23) |
-| 3. Veillée, signalement, modération | 2026-11-05 | 09:23 → 09:47 | ~24 min | Conversation de 14 jours avec la bougie, conclusion à deux, signalement, page de modération, en ligne et testé (**en attente de la confirmation de l'utilisateur**) |
+| 3. Veillée, signalement, modération | 2026-11-05 | 09:23 → 09:47 | ~24 min | Conversation de 14 jours avec la bougie, conclusion à deux, signalement, page de modération, en ligne et testé (confirmé par l'utilisateur) |
 
 **Total au 2026-11-05 09:47 : environ 1 h 31 de travail** (37 min le 3 novembre, 54 min le 5 novembre). Modèles : Opus 5.5 (effort élevé) jusqu'au 3 novembre 10:48, Sonnet 5.5 (effort moyen) jusqu'à la fin de la phase 1, changement fait par l'utilisateur, puis Opus 5.5 pour les phases 2 et 3.
 
 ## État actuel (2026-11-05 09:47)
 
-- Phases 0 à 3 terminées ; **la phase 3 attend la confirmation de l'utilisateur** avant de passer à la suite.
+- Phases 0 à 3 terminées et confirmées par l'utilisateur ; la suite reste à décider.
 - Le parcours complet fonctionne en ligne : enterrer, swiper, choisir, match, veillée, conclure.
 - Le site reste un MVP sans domaine (décision de l'utilisateur) : pas d'e-mails, donc pas de mot de passe oublié ni d'alertes.
 - Le cimetière est vide : l'utilisateur n'a pas de projet abandonné à y mettre.
-- Personne n'est encore administrateur : il faut d'abord que l'utilisateur crée son compte.
+- Personne n'est encore administrateur : l'utilisateur a choisi l'e-mail de son compte, mais le compte n'existe pas encore. Il doit le créer lui-même, puisque c'est lui qui choisit le mot de passe.
 - Décisions ouvertes : tombes d'exemple pour le cimetière vide, langue FR + EN, renommer le dossier local, suite à donner (pacte type, Médium, filtres).
 
 ---
