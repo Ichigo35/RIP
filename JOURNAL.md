@@ -16,11 +16,11 @@ conversations Claude Code.
 | 1. Site web : accueil + « Enterre ton projet » | 2026-11-03 | 10:55 → 11:04 | ~9 min | Site Cloudflare + base Neon en ligne et testé : https://rip.ichigo35.workers.dev (confirmé par l'utilisateur le 2026-11-05) |
 | 2. Comptes, swipe, match | 2026-11-05 | 08:53 → 09:23 | ~30 min | Comptes, cimetière à swiper, file du créateur, écran « Il revit ! », en ligne et testé (confirmé par l'utilisateur à 09:23) |
 | 3. Veillée, signalement, modération | 2026-11-05 | 09:23 → 09:47 | ~24 min | Conversation de 14 jours avec la bougie, conclusion à deux, signalement, page de modération, en ligne et testé (confirmé par l'utilisateur) |
-| 4. Tombes d'exemple, suppression de compte | 2026-11-05 | 09:53 → 10:06 | ~13 min | 5 tombes d'exemple marquées et hors chiffres publics, suppression de compte, en ligne et testé (**en attente de la confirmation de l'utilisateur**) |
+| 4. Tombes d'exemple, suppression de compte | 2026-11-05 | 09:51 → 10:05 | ~14 min | 5 tombes d'exemple marquées et hors chiffres publics, suppression de compte, en ligne et testé (**en attente de la confirmation de l'utilisateur**) |
 
-**Total au 2026-11-05 10:06 : environ 1 h 44 de travail** (37 min le 3 novembre, 1 h 07 le 5 novembre). Modèles : Opus 5.5 (effort élevé) jusqu'au 3 novembre 10:48, Sonnet 5.5 (effort moyen) jusqu'à la fin de la phase 1, changement fait par l'utilisateur, puis Opus 5.5 à partir de la phase 2.
+**Total au 2026-11-05 10:05 : environ 1 h 45 de travail** (37 min le 3 novembre, 1 h 08 le 5 novembre). Modèles : Opus 5.5 (effort élevé) jusqu'au 3 novembre 10:48, Sonnet 5.5 (effort moyen) jusqu'à la fin de la phase 1, changement fait par l'utilisateur, puis Opus 5.5 à partir de la phase 2.
 
-## État actuel (2026-11-05 10:06)
+## État actuel (2026-11-05 10:05)
 
 - Phases 0 à 3 confirmées ; **la phase 4 attend la confirmation de l'utilisateur**.
 - Le parcours complet fonctionne en ligne ; le cimetière contient 5 tombes d'exemple, clairement marquées.
@@ -383,7 +383,7 @@ Cloudflare Workers + assets statiques, Neon Postgres 17 (transactions HTTP), Typ
 
 ## Phase 4 — Tombes d'exemple, suppression de compte (2026-11-05)
 
-### La demande (mots de l'utilisateur, 09:53)
+### La demande (mots de l'utilisateur, 09:51)
 
 > « oui pour tombe d'exemple et pour la suite »
 
@@ -394,7 +394,7 @@ Cloudflare Workers + assets statiques, Neon Postgres 17 (transactions HTTP), Typ
 | Heure | Étape | Outils |
 | --- | --- | --- |
 | 09:50 | L'utilisateur crée son compte ; Claude le passe administrateur en base | Site, MCP Neon |
-| 09:53 | Feu vert pour les exemples et la suppression de compte | Claude Code |
+| 09:51 | Feu vert pour les exemples et la suppression de compte | Claude Code |
 | 09:55 | Code écrit : exemples dans la pile et le cimetière, suppression de compte, test étendu | TypeScript, JS |
 | 09:56 | Colonne `is_example`, puis déploiement, puis seulement l'insertion des tombes | MCP Neon, wrangler |
 | 09:57 | Les 3 parcours rejoués en local, corrections | Node.js, Playwright |
