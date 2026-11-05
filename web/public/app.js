@@ -12,7 +12,7 @@ function graveEl(t) {
   if (t.legacy) chips.append(chip(t.legacy.length > 48 ? t.legacy.slice(0, 47) + "…" : t.legacy));
   if (t.missing) chips.append(chip("Cherche : " + (t.missing.length > 36 ? t.missing.slice(0, 35) + "…" : t.missing), "chip-miss"));
   chips.append(chip(WILLS[t.will] || "", "chip-will"));
-  if (t.revived) chips.append(chip("En reprise", "chip-life"));
+  if (t.state) chips.append(chip(t.state === "risen" ? "Ressuscité" : "En veillée", "chip-life"));
   tomb.append(chips);
   fig.append(tomb, el("div", "plinth"));
   return fig;

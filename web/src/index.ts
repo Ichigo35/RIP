@@ -3,6 +3,9 @@ import {
   closeSession, currentUser, DUMMY_HASH, hashPassword, openSession, recordFailure, tooManyFailures, verifyPassword,
   type Sql, type User,
 } from "./auth";
+import { clean, invalid, json, UUID } from "./http";
+import { openReports, report, resolve } from "./moderation";
+import { endVigil, expireVigils, markRead, seal, sendMessage, vigil } from "./vigil";
 
 interface Env {
   DATABASE_URL: string;
@@ -12,17 +15,8 @@ const CAUSES = ["no_time", "no_money", "partner_left", "missing_skill", "no_mark
 const WILLS = ["cofound", "handover", "sell", "release"] as const;
 const ACTIONS = ["revive", "rest", "flower"] as const;
 const EMAIL = /^[^\s@]{1,64}@[^\s@]{1,190}\.[^\s@]{2,}$/;
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const MIN_PASSWORD = 10;
 const MIN_NOTE = 10;
-
-const json = (data: unknown, status = 200, headers: Record<string, string> = {}) =>
-  new Response(JSON.stringify(data), {
-    status,
-    headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store", ...headers },
-  });
-
-const clean = (v: unknown, max: number) => (typeof v === "string" ? v.trim().replace(/\s+/g, " ").slice(0, max) : "");
 
 async function hashIp(ip: string) {
   const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(`rip:${ip}`));
@@ -43,6 +37,9 @@ async function readBody(req: Request) {
   }
 }
 
+// Les pages qui montrent où en sont les tombes ; les veillées expirées s'y ferment.
+const LISTS = ["/api/graveyard", "/api/deck", "/api/my-tombs", "/api/reprises"];
+
 const notAvailable = () => json({ error: "Cette tombe n'est plus disponible." }, 409);
 
 /* ---------- lectures ---------- */
@@ -50,8 +47,9 @@ const notAvailable = () => json({ error: "Cette tombe n'est plus disponible." },
 async function graveyard(sql: Sql) {
   const [rows, counts] = await Promise.all([
     sql`SELECT b.name, b.year_start, b.year_end, b.epitaph, b.cause, b.will, b.legacy, b.missing,
-               EXISTS (SELECT 1 FROM matches m WHERE m.burial_id = b.id AND m.ended_at IS NULL) AS revived
-        FROM burials b WHERE b.consent ORDER BY b.created_at DESC LIMIT 12`,
+               CASE WHEN m.revived_at IS NOT NULL THEN 'risen' WHEN m.id IS NOT NULL THEN 'vigil' END AS state
+        FROM burials b LEFT JOIN matches m ON m.burial_id = b.id AND m.ended_at IS NULL
+        WHERE b.consent AND b.hidden_at IS NULL ORDER BY b.created_at DESC LIMIT 12`,
     sql`SELECT (SELECT count(*) FROM burials)::int AS burials, (SELECT count(*) FROM users)::int AS users`,
   ]);
   return json({ tombs: rows, ...counts[0] });
@@ -65,7 +63,7 @@ async function deck(sql: Sql, user: User | null) {
            (SELECT count(*) FROM swipes f WHERE f.burial_id = b.id AND f.action = 'flower')::int AS flowers,
            count(*) OVER ()::int AS total
     FROM burials b
-    WHERE b.consent AND b.user_id IS NOT NULL
+    WHERE b.consent AND b.hidden_at IS NULL
       AND (${me}::uuid IS NULL OR b.user_id <> ${me}::uuid)
       AND NOT EXISTS (SELECT 1 FROM swipes s WHERE s.burial_id = b.id AND s.user_id = ${me}::uuid)
       AND NOT EXISTS (SELECT 1 FROM matches m WHERE m.burial_id = b.id AND m.ended_at IS NULL)
@@ -75,10 +73,13 @@ async function deck(sql: Sql, user: User | null) {
 }
 
 async function myTombs(sql: Sql, user: User) {
-  const [tombs, requests] = await Promise.all([
+  const [tombs, requests, past] = await Promise.all([
     sql`SELECT b.id, b.name, b.year_start, b.year_end, b.epitaph, b.will, b.consent AS visible,
+               b.hidden_at IS NOT NULL AS hidden,
                (SELECT count(*) FROM swipes f WHERE f.burial_id = b.id AND f.action = 'flower')::int AS flowers,
-               m.id AS match_id, u.name AS reviver_name
+               m.id AS match_id, m.revived_at, u.name AS reviver_name,
+               greatest(ceil(extract(epoch FROM m.ends_at - now()) / 86400), 0)::int AS days_left,
+               (SELECT count(*) FROM messages x WHERE x.match_id = m.id AND x.sender_id <> ${user.id} AND x.created_at > m.creator_read_at)::int AS unread
         FROM burials b
         LEFT JOIN matches m ON m.burial_id = b.id AND m.ended_at IS NULL
         LEFT JOIN users u ON u.id = m.reviver_id
@@ -86,17 +87,22 @@ async function myTombs(sql: Sql, user: User) {
     sql`SELECT s.burial_id, s.note, s.created_at, u.id AS user_id, u.name, u.skills, u.bio
         FROM swipes s JOIN burials b ON b.id = s.burial_id JOIN users u ON u.id = s.user_id
         WHERE b.user_id = ${user.id} AND s.action = 'revive' AND s.decision IS NULL ORDER BY s.created_at`,
+    sql`SELECT m.id, m.burial_id, u.name FROM matches m JOIN users u ON u.id = m.reviver_id
+        WHERE m.creator_id = ${user.id} AND m.ended_at IS NOT NULL ORDER BY m.ended_at DESC`,
   ]);
-  return json({ tombs: tombs.map((t) => ({ ...t, requests: requests.filter((r) => r.burial_id === t.id) })) });
+  const of = <T extends Record<string, unknown>>(list: T[], id: unknown) => list.filter((r) => r.burial_id === id);
+  return json({ tombs: tombs.map((t) => ({ ...t, requests: of(requests, t.id), past: of(past, t.id) })) });
 }
 
 async function reprises(sql: Sql, user: User) {
   const rows = await sql`
     SELECT b.id, b.name, b.year_start, b.year_end, b.epitaph, s.action, s.note, s.decision,
-           m.id AS match_id, c.name AS creator_name,
+           m.id AS match_id, m.ended_at, m.revived_at, c.name AS creator_name,
+           greatest(ceil(extract(epoch FROM m.ends_at - now()) / 86400), 0)::int AS days_left,
+           (SELECT count(*) FROM messages x WHERE x.match_id = m.id AND x.sender_id <> ${user.id} AND x.created_at > m.reviver_read_at)::int AS unread,
            EXISTS (SELECT 1 FROM matches o WHERE o.burial_id = b.id AND o.ended_at IS NULL) AS taken
     FROM swipes s JOIN burials b ON b.id = s.burial_id
-    LEFT JOIN matches m ON m.burial_id = b.id AND m.reviver_id = ${user.id} AND m.ended_at IS NULL
+    LEFT JOIN matches m ON m.burial_id = b.id AND m.reviver_id = ${user.id}
     LEFT JOIN users c ON c.id = m.creator_id
     WHERE s.user_id = ${user.id} AND s.action <> 'rest' ORDER BY s.created_at DESC`;
   return json({ items: rows });
@@ -110,9 +116,14 @@ async function session(sql: Sql, user: User) {
            (SELECT json_build_object('id', m.id, 'tomb', b.name, 'creator', c.name) FROM matches m
             JOIN burials b ON b.id = m.burial_id JOIN users c ON c.id = m.creator_id
             WHERE m.reviver_id = ${user.id} AND NOT m.seen_by_reviver AND m.ended_at IS NULL
-            ORDER BY m.created_at LIMIT 1) AS unseen_match`;
-  const { email, name, skills, bio } = user;
-  return json({ user: { email, name, skills, bio }, ...rows[0] });
+            ORDER BY m.created_at LIMIT 1) AS unseen_match,
+           (SELECT count(*) FROM messages x JOIN matches m ON m.id = x.match_id
+            WHERE m.creator_id = ${user.id} AND x.sender_id <> ${user.id} AND x.created_at > m.creator_read_at)::int AS unread_tombs,
+           (SELECT count(*) FROM messages x JOIN matches m ON m.id = x.match_id
+            WHERE m.reviver_id = ${user.id} AND x.sender_id <> ${user.id} AND x.created_at > m.reviver_read_at)::int AS unread_reprises,
+           CASE WHEN ${user.is_admin} THEN (SELECT count(*) FROM reports WHERE resolved_at IS NULL)::int ELSE 0 END AS open_reports`;
+  const { email, name, skills, bio, is_admin } = user;
+  return json({ user: { email, name, skills, bio, is_admin }, ...rows[0] });
 }
 
 /* ---------- comptes ---------- */
@@ -143,12 +154,13 @@ async function login(sql: Sql, body: Record<string, unknown>, ipHash: string) {
   const keys = [`login:${email}`, `ip:${ipHash}`];
   if (await tooManyFailures(sql, keys)) return json({ error: "Trop d'essais. Réessaie dans 15 minutes." }, 429);
 
-  const rows = await sql`SELECT id, password_hash FROM users WHERE email = ${email}`;
+  const rows = await sql`SELECT id, password_hash, banned_at FROM users WHERE email = ${email}`;
   const valid = await verifyPassword(password, rows[0]?.password_hash ?? DUMMY_HASH);
   if (!rows[0] || !valid) {
     await recordFailure(sql, keys);
     return json({ error: "E-mail ou mot de passe incorrect." }, 401);
   }
+  if (rows[0].banned_at) return json({ error: "Ce compte est bloqué." }, 403);
   return json({ ok: true }, 200, { "set-cookie": await openSession(sql, rows[0].id) });
 }
 
@@ -181,7 +193,7 @@ async function bury(sql: Sql, user: User, body: Record<string, unknown>, ipHash:
 async function swipe(sql: Sql, user: User, body: Record<string, unknown>) {
   const tombId = clean(body.tombId, 36);
   const action = clean(body.action, 10);
-  if (!UUID.test(tombId) || !(ACTIONS as readonly string[]).includes(action)) return json({ error: "Requête invalide." }, 400);
+  if (!UUID.test(tombId) || !(ACTIONS as readonly string[]).includes(action)) return invalid();
   const note = action === "revive" ? clean(body.note, 300) : "";
   if (action === "revive" && note.length < MIN_NOTE) {
     return json({ error: `Écris au moins ${MIN_NOTE} caractères au créateur.`, field: "note" }, 400);
@@ -190,7 +202,7 @@ async function swipe(sql: Sql, user: User, body: Record<string, unknown>) {
   const rows = await sql`
     INSERT INTO swipes (user_id, burial_id, action, note)
     SELECT ${user.id}::uuid, b.id, ${action}::text, ${note}::text FROM burials b
-    WHERE b.id = ${tombId} AND b.consent AND b.user_id <> ${user.id}
+    WHERE b.id = ${tombId} AND b.consent AND b.hidden_at IS NULL AND b.user_id <> ${user.id}
       AND NOT EXISTS (SELECT 1 FROM matches m WHERE m.burial_id = b.id AND m.ended_at IS NULL)
     ON CONFLICT (user_id, burial_id) DO UPDATE SET action = EXCLUDED.action, note = EXCLUDED.note, created_at = now()
     WHERE swipes.decision IS NULL
@@ -202,7 +214,7 @@ async function swipe(sql: Sql, user: User, body: Record<string, unknown>) {
 
 async function undoSwipe(sql: Sql, user: User, body: Record<string, unknown>) {
   const tombId = clean(body.tombId, 36);
-  if (!UUID.test(tombId)) return json({ error: "Requête invalide." }, 400);
+  if (!UUID.test(tombId)) return invalid();
   const rows = await sql`DELETE FROM swipes WHERE user_id = ${user.id} AND burial_id = ${tombId} AND decision IS NULL RETURNING burial_id`;
   return rows[0] ? json({ ok: true }) : json({ error: "Ce geste ne peut plus être annulé." }, 409);
 }
@@ -212,7 +224,7 @@ async function decide(sql: Sql, user: User, body: Record<string, unknown>) {
   const tombId = clean(body.tombId, 36);
   const reviverId = clean(body.userId, 36);
   const decision = clean(body.decision, 10);
-  if (!UUID.test(tombId) || !UUID.test(reviverId) || !["accept", "decline"].includes(decision)) return json({ error: "Requête invalide." }, 400);
+  if (!UUID.test(tombId) || !UUID.test(reviverId) || !["accept", "decline"].includes(decision)) return invalid();
 
   if (decision === "decline") {
     const rows = await sql`
@@ -250,10 +262,12 @@ async function saveProfile(sql: Sql, user: User, body: Record<string, unknown>) 
 }
 
 async function route(req: Request, env: Env): Promise<Response> {
-  const path = new URL(req.url).pathname;
+  const url = new URL(req.url);
+  const path = url.pathname;
   const sql = neon(env.DATABASE_URL);
 
   if (req.method === "GET") {
+    if (LISTS.includes(path)) await expireVigils(sql);
     if (path === "/api/graveyard") return graveyard(sql);
     const user = await currentUser(req, sql);
     if (path === "/api/deck") return deck(sql, user);
@@ -261,6 +275,8 @@ async function route(req: Request, env: Env): Promise<Response> {
     if (!user) return json({ error: "Connecte-toi d'abord." }, 401);
     if (path === "/api/my-tombs") return myTombs(sql, user);
     if (path === "/api/reprises") return reprises(sql, user);
+    if (path === "/api/vigil") return vigil(sql, user, url);
+    if (path === "/api/moderation") return user.is_admin ? openReports(sql) : json({ error: "forbidden" }, 403);
     return json({ error: "not_found" }, 404);
   }
 
@@ -268,7 +284,7 @@ async function route(req: Request, env: Env): Promise<Response> {
   if (!sameOrigin(req)) return json({ error: "forbidden" }, 403);
 
   const body = await readBody(req);
-  if (!body) return json({ error: "Requête invalide." }, 400);
+  if (!body) return invalid();
   if (clean(body.website, 50)) return json({ ok: true }); // piège à robots : on fait semblant
 
   const ipHash = await hashIp(req.headers.get("cf-connecting-ip") ?? "local");
@@ -288,15 +304,21 @@ async function route(req: Request, env: Env): Promise<Response> {
   }
   if (path === "/api/requests/decide") return decide(sql, user, body);
   if (path === "/api/profile") return saveProfile(sql, user, body);
+  if (path === "/api/vigil/message") return sendMessage(sql, user, body);
+  if (path === "/api/vigil/read") return markRead(sql, user, body);
+  if (path === "/api/vigil/end") return endVigil(sql, user, body);
+  if (path === "/api/vigil/seal") return seal(sql, user, body);
+  if (path === "/api/reports") return report(sql, user, body);
+  if (path === "/api/moderation/resolve") return user.is_admin ? resolve(sql, body) : json({ error: "forbidden" }, 403);
   if (path === "/api/tombs/visibility") {
     const tombId = clean(body.tombId, 36);
-    if (!UUID.test(tombId)) return json({ error: "Requête invalide." }, 400);
-    const rows = await sql`UPDATE burials SET consent = ${body.visible === true} WHERE id = ${tombId} AND user_id = ${user.id} RETURNING id`;
+    if (!UUID.test(tombId)) return invalid();
+    const rows = await sql`UPDATE burials SET consent = ${body.visible === true} WHERE id = ${tombId} AND user_id = ${user.id} AND hidden_at IS NULL RETURNING id`;
     return rows[0] ? json({ ok: true }) : notAvailable();
   }
   if (path === "/api/matches/seen") {
     const matchId = clean(body.matchId, 36);
-    if (!UUID.test(matchId)) return json({ error: "Requête invalide." }, 400);
+    if (!UUID.test(matchId)) return invalid();
     await sql`UPDATE matches SET seen_by_reviver = true WHERE id = ${matchId} AND reviver_id = ${user.id}`;
     return json({ ok: true });
   }

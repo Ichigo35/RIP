@@ -14,16 +14,19 @@ conversations Claude Code.
 | 0. Idée et plan illustré | 2026-11-03 | 10:28 → 10:47 | ~19 min | Concept, étude de marché, plan en 11 planches, journal + dépôt GitHub |
 | 0b. Renommage en RIP | 2026-11-03 | 10:49 → 10:53 | ~4 min | Nom officiel « RIP », planches et document mis à jour |
 | 1. Site web : accueil + « Enterre ton projet » | 2026-11-03 | 10:55 → 11:04 | ~9 min | Site Cloudflare + base Neon en ligne et testé : https://rip.ichigo35.workers.dev (confirmé par l'utilisateur le 2026-11-05) |
-| 2. Comptes, swipe, match | 2026-11-05 | 08:53 → 09:23 | ~30 min | Comptes, cimetière à swiper, file du créateur, écran « Il revit ! », en ligne et testé (**en attente de la confirmation de l'utilisateur**) |
+| 2. Comptes, swipe, match | 2026-11-05 | 08:53 → 09:23 | ~30 min | Comptes, cimetière à swiper, file du créateur, écran « Il revit ! », en ligne et testé (confirmé par l'utilisateur à 09:23) |
+| 3. Veillée, signalement, modération | 2026-11-05 | 09:23 → 09:47 | ~24 min | Conversation de 14 jours avec la bougie, conclusion à deux, signalement, page de modération, en ligne et testé (**en attente de la confirmation de l'utilisateur**) |
 
-**Total au 2026-11-05 09:23 : environ 1 h 07 de travail** (37 min le 3 novembre, 30 min le 5 novembre). Modèles : Opus 5.5 (effort élevé) jusqu'au 3 novembre 10:48, Sonnet 5.5 (effort moyen) jusqu'à la fin de la phase 1, changement fait par l'utilisateur, puis Opus 5.5 pour la phase 2.
+**Total au 2026-11-05 09:47 : environ 1 h 31 de travail** (37 min le 3 novembre, 54 min le 5 novembre). Modèles : Opus 5.5 (effort élevé) jusqu'au 3 novembre 10:48, Sonnet 5.5 (effort moyen) jusqu'à la fin de la phase 1, changement fait par l'utilisateur, puis Opus 5.5 pour les phases 2 et 3.
 
-## État actuel (2026-11-05 09:23)
+## État actuel (2026-11-05 09:47)
 
-- Phases 0, 1 et 2 terminées ; **la phase 2 attend la confirmation de l'utilisateur** avant de passer à la suite.
-- Le site est en ligne et fonctionne de bout en bout, mais le cimetière est vide : aucune vraie tombe pour l'instant.
-- Phase 3 proposée (pas commencée) : la veillée (messagerie de 14 jours) et le signalement.
-- Décisions ouvertes : domaine et marque RIP (qui débloque aussi les e-mails), renommer le dossier local, interface en anglais en plus du français, premiers projets à enterrer.
+- Phases 0 à 3 terminées ; **la phase 3 attend la confirmation de l'utilisateur** avant de passer à la suite.
+- Le parcours complet fonctionne en ligne : enterrer, swiper, choisir, match, veillée, conclure.
+- Le site reste un MVP sans domaine (décision de l'utilisateur) : pas d'e-mails, donc pas de mot de passe oublié ni d'alertes.
+- Le cimetière est vide : l'utilisateur n'a pas de projet abandonné à y mettre.
+- Personne n'est encore administrateur : il faut d'abord que l'utilisateur crée son compte.
+- Décisions ouvertes : tombes d'exemple pour le cimetière vide, langue FR + EN, renommer le dossier local, suite à donner (pacte type, Médium, filtres).
 
 ---
 
@@ -219,7 +222,7 @@ Celui proposé à la fin de la phase 1 : comptes, swipe sur les tombes, match. L
 | --- | --- | --- |
 | 08:53 | Feu vert de l'utilisateur | Claude Code |
 | 08:54 | Relecture du journal, du plan (document Claude Docs), du code et de la base | Bash, Claude Docs, MCP Neon |
-| 08:56 | Projet Stitch « RIP » retrouvé : le design system existe, mais aucun écran, la génération de la phase 1 n'avait rien laissé | MCP Stitch |
+| 08:56 | Projet Stitch « RIP » retrouvé avec son design system. La liste des écrans était vide, mais cette liste n'est pas fiable (voir la correction en phase 3) | MCP Stitch |
 | 08:57 | 3 maquettes lancées en parallèle (Cimetière, Mes tombes, Il revit !), **reçues 2 min 30 plus tard** | MCP Stitch |
 | 09:00 | Relecture des maquettes : on garde la composition, on retire ce que Stitch a inventé | Claude |
 | 09:02 | Migration de la base : tables `users`, `sessions`, `auth_attempts`, `swipes`, `matches`, colonne `burials.user_id` (`web/db/0002_comptes_swipe_match.sql`) | MCP Neon |
@@ -286,3 +289,90 @@ Cloudflare Workers + assets statiques, Neon Postgres 17, `@neondatabase/serverle
 ### Sources brutes
 
 - Conversation Claude Code : session `41e86b63-a2e5-4410-b916-368a4be85f78`, copie locale dans `.journal-brut/`.
+
+
+---
+
+## Phase 3 — Veillée, signalement, modération (2026-11-05)
+
+### La demande (mots de l'utilisateur, 09:23)
+
+> « oui je confirme, passe phase 3, pas de domaine, c'est juste un MVP, je n'ai pas de projets abandonnees »
+
+### Périmètre choisi
+
+Celui proposé à la fin de la phase 2 et accepté : la veillée de 14 jours (messagerie) et le signalement. Claude y a ajouté deux choses sans lesquelles le parcours restait sans issue : conclure la reprise à deux, et une page de modération pour traiter les signalements.
+
+### Chronologie
+
+| Heure | Étape | Outils |
+| --- | --- | --- |
+| 09:23 | Confirmation de la phase 2, feu vert phase 3 | Claude Code |
+| 09:26 | Maquettes demandées à Stitch : la veillée est reçue en 2 minutes, la modération expire et n'est pas relancée | MCP Stitch |
+| 09:28 | Migration de la base : tables `messages` et `reports`, colonnes sur `matches`, `users`, `burials` (`web/db/0003_veillee_signalement.sql`) | MCP Neon |
+| 09:30 | API : `web/src/vigil.ts`, `web/src/moderation.ts`, `web/src/http.ts`, branchement dans `index.ts` | TypeScript, Workers |
+| 09:31 | Écrans : `veillee`, `moderation`, drapeau de signalement sur les tombes, pastilles de messages non lus, liens depuis Mes tombes et Reprises | HTML/CSS/JS sans framework |
+| 09:34 | Test de l'API étendu aux veillées et à la modération | Node.js, wrangler dev |
+| 09:36 | Parcours Chrome à deux personnes en parallèle, 17 captures, puis corrections | Playwright |
+| 09:39 | Les 3 parcours rejoués en local : tout est au vert | Node.js, Playwright |
+| 09:41 | Déploiement : **la tâche planifiée est refusée par Cloudflare** (limite gratuite atteinte) | wrangler |
+| 09:43 | Expiration déplacée à la lecture des listes, nouveau déploiement sans erreur | TypeScript, wrangler |
+| 09:44 | Parcours complet sur le site en ligne, expiration après 14 jours comprise : aucun problème, base revenue à zéro | Playwright |
+| 09:45 | Clôture : journal, règles, mémoire, archive, commit et push | git |
+
+### Les choix faits
+
+| Choix | Qui | Pourquoi |
+| --- | --- | --- |
+| Confirmation de la phase 2, feu vert phase 3 | **Utilisateur** | « oui je confirme, passe phase 3 » |
+| Pas de domaine, le site reste un MVP | **Utilisateur** | « c'est juste un MVP » ; conséquence : pas d'e-mails, donc pas de mot de passe oublié ni d'alertes |
+| Pas de tombes de l'utilisateur | **Utilisateur** | « je n'ai pas de projets abandonnees » ; le cimetière reste vide |
+| Messages relevés toutes les 5 secondes, stockés dans Neon, au lieu des Durable Objects du plan | Claude | Bien plus simple pour un MVP ; le relevé s'arrête quand l'onglet est masqué ou la veillée finie |
+| Conclure la reprise à deux, sans contrat | Claude | Le pacte type doit être relu par un juriste (plan). Sans cette sortie, une reprise réussie retournerait au cimetière au bout de 14 jours |
+| Chacun peut mettre fin à la veillée | Claude | Levait la limite de la phase 2 : une reprise ne pouvait pas être annulée |
+| La conversation reste à relire après la fin, sans pouvoir écrire | Claude | Chacun garde la trace de ce qui s'est dit |
+| Une tombe ressuscitée ne revient jamais au cimetière, les autres demandes sont déclinées | Claude | La file n'a plus d'objet |
+| Administrateur attribué à la main en base, jamais d'après l'e-mail | Claude | Les e-mails ne sont pas vérifiés : n'importe qui pourrait s'inscrire avec celui de l'administrateur |
+| Au 3e signalement ouvert, la tombe se retire seule ; « Classer » la remet | Claude | L'administrateur n'a aucune alerte : le site doit se protéger en son absence |
+| La modération peut lire la conversation signalée, et le dialogue le dit | Claude | Impossible de juger sans la lire ; la personne qui signale doit le savoir |
+| Bloquer un compte : session fermée, tombes retirées, veillées fermées ; une reprise conclue reste | Claude | Protéger l'autre personne sans lui retirer son projet |
+| Expiration à la lecture des listes au lieu d'une tâche planifiée | Claude, après le refus de Cloudflare | Le compte gratuit a déjà ses 5 tâches planifiées, prises par d'autres projets. Pas de passage en payant, rien de touché ailleurs |
+| Page de modération codée sans maquette | Claude | Stitch a expiré ; l'outil demande de ne pas relancer. Elle reprend la charte existante |
+| Reporté : pacte type, coffre, Médium, filtres, quota de swipes, suppression de compte, images sur les tombes | Claude | Hors du périmètre de la phase |
+
+### Moments à garder pour la vidéo
+
+- **Deux navigateurs côte à côte** : Léa écrit, le message apparaît chez Karim sans recharger ; Karim conclut, puis Léa, et « Ressuscité ! » s'affiche des deux côtés.
+- **La bougie se consume** : sa hauteur suit les jours restants ; à la fin elle s'éteint, ou laisse la place à la pousse si le projet est ressuscité.
+- **Le déploiement refusé** : tous les tests étaient au vert, et c'est le déploiement qui a révélé que Cloudflare refusait la tâche planifiée. Sans lire la sortie de la commande, on aurait cru que tout allait bien : le site répondait et les parcours passaient, mais les veillées ne se seraient jamais éteintes.
+- Une tentative d'injection de code dans un message s'affiche comme du simple texte.
+- Le même piège qu'en phase 1 : un style général de l'accueil (`section`) ajoutait un grand vide autour de la conversation, repéré sur la capture.
+- « Il revit ! » s'affichait par-dessus la veillée qu'on était déjà en train d'ouvrir : retiré dans ce cas.
+- Le test a buté sur le garde-fou des 6 tombes par heure : c'était le test qui en créait trop.
+
+### Correction sur la phase 2
+
+En phase 2, ce journal disait que la génération Stitch de la phase 1 « n'avait rien laissé », parce que `list_screens` renvoyait une liste vide. C'était une conclusion trop rapide : cet outil renvoie aussi une liste vide alors que 4 écrans existent maintenant. On ne peut donc rien dire de ce qui s'est passé en phase 1. De la même façon, on ne sait pas si la maquette de modération a fini par se générer.
+
+### Résultat
+
+- En ligne : https://rip.ichigo35.workers.dev, nouvelles pages `/veillee?id=…` et `/moderation`.
+- Tests : 160 contrôles d'API au vert ; parcours complets dans Chrome (bureau et iPhone émulé) en local puis sur le site en ligne : aucune erreur console, aucun débordement. Pas encore essayé sur un vrai téléphone.
+- Base : toutes les données de test supprimées (0 compte, 0 tombe, 0 message, 0 signalement).
+- Maquette : `plan/stitch/veillee.jpg` ; captures : `plan/captures/phase-3/`.
+
+### Limites connues à ce stade
+
+- Sans domaine : pas de mot de passe oublié, pas de vérification d'e-mail, pas d'alerte hors du site. Un mot de passe perdu, c'est un compte perdu.
+- Une veillée expirée ne se ferme que lorsque quelqu'un consulte le cimetière ou ses listes ; d'ici là, on ne peut déjà plus y écrire.
+- Conclure la reprise n'a aucune valeur de contrat.
+- Les messages arrivent en 5 secondes au plus, pas instantanément. Un onglet ouvert toute une journée consomme environ 17 000 requêtes sur les 100 000 du plan gratuit : à revoir si le site grandit.
+- Pas de suppression de compte, à ajouter avant une vraie ouverture au public (RGPD).
+
+### Outils et technos
+
+Cloudflare Workers + assets statiques, Neon Postgres 17 (transactions HTTP), TypeScript, HTML/CSS/JS sans framework, MCP Stitch, Playwright + Chrome (deux sessions en parallèle), icônes Lucide.
+
+### Sources brutes
+
+- Conversation Claude Code : session `41e86b63-a2e5-4410-b916-368a4be85f78` (même session que la phase 2), copie locale dans `.journal-brut/`.

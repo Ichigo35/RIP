@@ -44,6 +44,12 @@ async function revive(item) {
   load();
 }
 
+function vigilLink(item, label) {
+  const a = el("a", "btn btn-go", item.unread ? `${label} (${item.unread})` : label);
+  a.href = `/veillee?id=${item.match_id}`;
+  return a;
+}
+
 function group(title, rows) {
   if (!rows.length) return [];
   const section = el("section", "group");
@@ -57,20 +63,24 @@ async function load() {
   const { ok, data } = await api("/api/reprises");
   if (!ok) return view.replaceChildren(el("p", "empty", data.error || "Impossible de charger tes reprises pour l'instant."));
   const items = data.items;
-  const live = items.filter((i) => i.match_id);
+  const live = items.filter((i) => i.match_id && !i.ended_at);
+  const over = items.filter((i) => i.ended_at);
   const waiting = items.filter((i) => i.action === "revive" && !i.decision);
   const declined = items.filter((i) => i.decision === "declined");
   const flowers = items.filter((i) => i.action === "flower");
 
   const sections = [
-    ...group("Ils revivent", live.map((i) => rowEl(i, `${i.creator_name} a accepté. La veillée de 14 jours arrive bientôt.`))),
+    ...group("Ils revivent", live.map((i) => rowEl(i,
+      i.revived_at ? `Ressuscité avec ${i.creator_name}.` : `${i.creator_name} a accepté. Encore ${i.days_left} jour${i.days_left > 1 ? "s" : ""} pour vous mettre d'accord.`,
+      [vigilLink(i, "Ouvrir la veillée")]))),
     ...group("En attente du créateur", waiting.map((i) => rowEl(i,
-      i.taken ? "Une autre reprise est en cours. Ta demande reste en file." : "Le créateur n'a pas encore répondu.",
+      i.taken ? "Une autre veillée est en cours. Ta demande reste en file." : "Le créateur n'a pas encore répondu.",
       [button("Retirer ma demande", "link", () => withdraw(i, `Ta demande pour ${i.name} est retirée.`))]))),
     ...group("Mes fleurs", flowers.map((i) => rowEl(i,
       i.taken ? "Ce projet est en cours de reprise." : "Tu soutiens ce projet.",
       [...(i.taken ? [] : [button("Ressusciter", "btn btn-go", () => revive(i))]),
         button("Retirer ma fleur", "link", () => withdraw(i, `Fleur retirée de ${i.name}.`))]))),
+    ...group("Veillées terminées", over.map((i) => rowEl(i, "La bougie s'est éteinte.", [vigilLink(i, "Relire")]))),
     ...group("Merci pour ta proposition", declined.map((i) => rowEl(i, "Le créateur te remercie. Ce projet prend une autre voie."))),
   ];
 

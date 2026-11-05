@@ -1,4 +1,4 @@
-import { $, api, askAuth, askNote, CAUSES, chip, el, plural, shell, tombFace, toast, WILLS } from "/lib.js";
+import { $, api, askAuth, askNote, askReport, CAUSES, chip, el, plural, REPORT_TOMB, shell, tombFace, toast, WILLS } from "/lib.js";
 
 const THRESHOLD = 110;
 const FLIGHT_MS = 320;
@@ -44,6 +44,12 @@ function cardEl(t) {
   chips.append(chip(WILLS[t.will] || "", "chip-will"));
   if (t.flowers) chips.append(chip(plural(t.flowers, "fleur")));
   tomb.append(chips);
+  const flag = Object.assign(el("button", "flag"), { type: "button" });
+  flag.setAttribute("aria-label", `Signaler ${t.name}`);
+  flag.title = "Signaler cette tombe";
+  flag.insertAdjacentHTML("beforeend", '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><path d="M4 22v-7"/></svg>');
+  flag.addEventListener("click", () => signal(t));
+  tomb.append(flag);
   card.append(stamp("stamp-go", "Ressusciter"), stamp("stamp-rest", "Laisser reposer"), stamp("stamp-flower", "Une fleur"), tomb, el("div", "plinth"));
   drag(card);
   return card;
@@ -203,6 +209,22 @@ async function act(action) {
   if (action === "rest") rested += 1;
   render();
   toast(DONE[action](t.name), { label: "Annuler", run: () => undo(t, action) });
+}
+
+async function signal(t) {
+  if (!me) {
+    if (await askAuth("Crée ton compte pour signaler une tombe.")) location.reload();
+    return;
+  }
+  const answer = await askReport({ title: `Signaler ${t.name}`, text: "La modération regarde chaque signalement. Cette tombe ne te sera plus proposée.", reasons: REPORT_TOMB });
+  if (!answer) return;
+  const { ok, data } = await api("/api/reports", { kind: "tomb", tombId: t.id, ...answer });
+  if (!ok) return toast(data.error || "Une erreur est survenue. Réessaie.");
+  queue = queue.filter((x) => x.id !== t.id);
+  total -= 1;
+  rested += 1;
+  render();
+  toast("Merci, ton signalement est envoyé.");
 }
 
 async function undo(t, action) {

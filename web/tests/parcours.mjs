@@ -133,7 +133,7 @@ async function run() {
   check("le match nomme la tombe et Bob", match.data.match?.tomb === "Publique" && match.data.match?.reviver === "Bob", match.data);
   check("une seule reprise à la fois", (await ana("/api/requests/decide", { tombId: pub.id, userId: idOf("Cam"), decision: "accept" })).status === 409);
   check("la tombe quitte la pile", !(await deckIds(dan)).includes(pub.id) && !(await deckIds(anon)).includes(pub.id));
-  check("le cimetière public la marque", (await anon("/api/graveyard")).data.tombs.find((t) => t.name === "Publique")?.revived === true);
+  check("le cimetière public la marque", (await anon("/api/graveyard")).data.tombs.find((t) => t.name === "Publique")?.state === "vigil");
   const eve = client();
   await eve("/api/signup", { name: "Eve", email: email("eve"), password: PASSWORD });
   check("plus de swipe sur une tombe en reprise", (await eve("/api/swipes", { tombId: pub.id, action: "flower" })).status === 409);
@@ -158,14 +158,165 @@ async function run() {
   const both = await Promise.all(race.map((r) => ana("/api/requests/decide", { tombId: second.id, userId: r.user_id, decision: "accept" })));
   check("course : un seul match", both.filter((r) => r.status === 201).length === 1 && both.filter((r) => r.status === 409).length === 1, both.map((r) => r.status));
 
+  // la veillée
+  const matchId = match.data.match.id;
+  const open = await bob(`/api/vigil?id=${matchId}`);
+  check("Bob ouvre la veillée", open.status === 200 && open.data.vigil.other_name === "Ana" && open.data.vigil.days_left === 14 && open.data.vigil.open === true, open.data);
+  check("la demande de Bob sert d'ouverture", open.data.vigil.note === "Je peux reprendre le code.");
+  check("pas d'e-mail dans la veillée", !open.text.includes("@example.com"));
+  check("identifiant mal formé = 404", (await bob("/api/vigil?id=abc")).status === 404);
+
+  // personne d'autre n'y entre
+  check("Cam ne lit pas la veillée", (await cam(`/api/vigil?id=${matchId}`)).status === 404);
+  check("sans compte, pas de veillée", (await anon(`/api/vigil?id=${matchId}`)).status === 401);
+  check("Cam n'écrit pas dans la veillée", (await cam("/api/vigil/message", { matchId, body: "Intrus" })).status === 409);
+  check("Cam ne ferme pas la veillée", (await cam("/api/vigil/end", { matchId })).status === 409);
+  check("Cam ne conclut pas la veillée", (await cam("/api/vigil/seal", { matchId })).status === 409);
+
+  // messages
+  check("message vide = 400", (await bob("/api/vigil/message", { matchId, body: "   " })).status === 400);
+  const sent = await bob("/api/vigil/message", { matchId, body: "Bonjour Ana,\n\nje commence quand ?" });
+  check("message envoyé", sent.status === 201 && sent.data.message.mine === true, sent.data);
+  check("les retours à la ligne sont gardés", sent.data.message.body.includes("\n\n"));
+  check("message tronqué à 1000", (await ana("/api/vigil/message", { matchId, body: "x".repeat(1500) })).data.message.body.length === 1000);
+  const anaThread = await ana(`/api/vigil?id=${matchId}`);
+  check("Ana lit les deux messages", anaThread.data.messages.length === 2, anaThread.data.messages.length);
+  check("chacun reconnaît les siens", anaThread.data.messages[0].mine === false && anaThread.data.messages[1].mine === true);
+  const lastSeen = anaThread.data.messages[1].id;
+  await bob("/api/vigil/message", { matchId, body: "Tu es là ?" });
+  check("seuls les nouveaux messages reviennent", (await ana(`/api/vigil?id=${matchId}&after=${lastSeen}`)).data.messages.length === 1);
+  check("pastille de messages non lus", (await ana("/api/me")).data.unread_tombs === 2, (await ana("/api/me")).data.unread_tombs);
+  check("non lus sur la tombe", (await ana("/api/my-tombs")).data.tombs.find((t) => t.id === pub.id).unread === 2);
+  await ana("/api/vigil/read", { matchId });
+  check("lu : la pastille disparaît", (await ana("/api/me")).data.unread_tombs === 0);
+  check("non lus côté repreneur", (await bob("/api/me")).data.unread_reprises === 1);
+  await cam("/api/vigil/read", { matchId });
+  check("Cam ne marque rien comme lu", (await bob("/api/me")).data.unread_reprises === 1);
+
+  // conclure : il faut les deux
+  const firstSeal = await bob("/api/vigil/seal", { matchId });
+  check("un seul accord ne suffit pas", firstSeal.data.revived === false, firstSeal.data);
+  check("Ana voit que Bob a conclu", (await ana(`/api/vigil?id=${matchId}`)).data.vigil.sealed_by_other === true);
+  check("Bob attend Ana", (await bob(`/api/vigil?id=${matchId}`)).data.vigil.sealed_by_me === true);
+  const bothSeal = await ana("/api/vigil/seal", { matchId });
+  check("deux accords : ressuscité", bothSeal.data.revived === true, bothSeal.data);
+  check("le cimetière public affiche Ressuscité", (await anon("/api/graveyard")).data.tombs.find((t) => t.name === "Publique")?.state === "risen");
+  check("une tombe ressuscitée ne revient pas", !(await deckIds(eve)).includes(pub.id));
+  check("la file se referme pour Cam", (await cam("/api/reprises")).data.items.find((i) => i.id === pub.id)?.decision === "declined");
+  check("on ne ferme plus une reprise conclue", (await bob("/api/vigil/end", { matchId })).status === 409);
+  check("on peut encore s'écrire", (await bob("/api/vigil/message", { matchId, body: "On continue !" })).status === 201);
+
+  // quitter : la tombe retourne au cimetière et la file repart
+  const raceMatch = both.find((r) => r.status === 201).data.match;
+  const left = race.find((r) => r.name === raceMatch.reviver);
+  const leaver = raceMatch.reviver === "Bob" ? bob : cam;
+  const waiter = raceMatch.reviver === "Bob" ? cam : bob;
+  check("quitter la veillée", (await leaver("/api/vigil/end", { matchId: raceMatch.id })).status === 200);
+  check("quitter deux fois = 409", (await ana("/api/vigil/end", { matchId: raceMatch.id })).status === 409);
+  check("la tombe retourne dans la pile", (await deckIds(eve)).includes(second.id));
+  check("plus de message après la fin", (await ana("/api/vigil/message", { matchId: raceMatch.id, body: "Encore là ?" })).status === 409);
+  check("plus d'accord après la fin", (await ana("/api/vigil/seal", { matchId: raceMatch.id })).status === 409);
+  const closedView = (await ana(`/api/vigil?id=${raceMatch.id}`)).data.vigil;
+  check("la veillée reste à relire", closedView.open === false && closedView.end_reason === "left" && closedView.ended_by_me === false, closedView);
+  const secondAfter = (await ana("/api/my-tombs")).data.tombs.find((t) => t.id === second.id);
+  check("l'historique reste chez le créateur", secondAfter.past.length === 1 && secondAfter.past[0].name === raceMatch.reviver, secondAfter.past);
+  check("la veillée terminée reste chez le repreneur", !!(await leaver("/api/reprises")).data.items.find((i) => i.id === second.id)?.ended_at);
+  check("l'autre demande peut être acceptée", secondAfter.requests.length === 1 && secondAfter.requests[0].name !== left.name);
+
+  // 14 jours sans accord : la bougie s'éteint
+  const again = await ana("/api/requests/decide", { tombId: second.id, userId: secondAfter.requests[0].user_id, decision: "accept" });
+  check("nouvelle veillée après la première", again.status === 201, again.data);
+  await sql`UPDATE matches SET ends_at = now() - interval '1 minute' WHERE id = ${again.data.match.id}`;
+  check("après 14 jours, plus de message", (await waiter("/api/vigil/message", { matchId: again.data.match.id, body: "Trop tard ?" })).status === 409);
+  check("après 14 jours, plus d'accord", (await waiter("/api/vigil/seal", { matchId: again.data.match.id })).status === 409);
+  check("la tombe est de retour dès qu'on regarde le cimetière", (await deckIds(eve)).includes(second.id));
+  check("la bougie s'est éteinte", (await ana(`/api/vigil?id=${again.data.match.id}`)).data.vigil.end_reason === "expired");
+
+  // limite d'envoi
+  const limits = [];
+  for (let i = 0; i < 21; i += 1) limits.push((await bob("/api/vigil/message", { matchId, body: `Message ${i}` })).status);
+  check("trop de messages en une minute = 429", limits.at(-1) === 429, limits.slice(-3));
+
+  // signalement
+  check("signaler sans compte = 401", (await anon("/api/reports", { kind: "tomb", tombId: second.id, reason: "fake" })).status === 401);
+  check("motif inconnu = 400", (await eve("/api/reports", { kind: "tomb", tombId: second.id, reason: "ennui" })).status === 400);
+  check("motif d'un autre type = 400", (await eve("/api/reports", { kind: "tomb", tombId: second.id, reason: "harassment" })).status === 400);
+  check("signaler une tombe", (await eve("/api/reports", { kind: "tomb", tombId: second.id, reason: "fake", details: "Ce projet n'existe pas." })).status === 201);
+  check("la tombe signalée sort de sa pile", !(await deckIds(eve)).includes(second.id));
+  await eve("/api/reports", { kind: "tomb", tombId: second.id, reason: "fake" });
+  await ana("/api/reports", { kind: "tomb", tombId: second.id, reason: "fake" });
+  const count = async () => (await sql`SELECT count(*)::int AS n FROM reports WHERE burial_id = ${second.id}`)[0].n;
+  check("un signalement par personne, pas sur sa propre tombe", (await count()) === 1, await count());
+  check("la modération est interdite aux membres", (await eve("/api/moderation")).status === 403);
+  check("résoudre est interdit aux membres", (await eve("/api/moderation/resolve", { reportId: crypto.randomUUID(), action: "dismiss" })).status === 403);
+  check("la modération est interdite sans compte", (await anon("/api/moderation")).status === 401);
+  const [frank, gina] = [client(), client()];
+  await frank("/api/signup", { name: "Frank", email: email("frank"), password: PASSWORD });
+  await gina("/api/signup", { name: "Gina", email: email("gina"), password: PASSWORD });
+  await frank("/api/reports", { kind: "tomb", tombId: second.id, reason: "offensive" });
+  check("2 signalements : la tombe reste", (await deckIds(gina)).includes(second.id));
+  await gina("/api/reports", { kind: "tomb", tombId: second.id, reason: "stolen" });
+  check("3 signalements : la tombe se retire", !(await anon("/api/graveyard")).data.tombs.some((t) => t.name === "Seconde"));
+  check("le créateur ne peut pas la republier", (await ana("/api/tombs/visibility", { tombId: second.id, visible: true })).status === 409);
+  check("le créateur le voit", (await ana("/api/my-tombs")).data.tombs.find((t) => t.id === second.id).hidden === true);
+
+  // signaler une personne dans une veillée
+  check("Cam ne peut pas signaler dans une veillée étrangère", (await cam("/api/reports", { kind: "person", matchId, reason: "scam" })).status === 201
+    && (await sql`SELECT count(*)::int AS n FROM reports WHERE kind = 'person'`)[0].n === 0);
+  check("Ana signale Bob", (await ana("/api/reports", { kind: "person", matchId, reason: "harassment", details: "Il insiste." })).status === 201);
+
+  // l'administrateur traite
+  await sql`UPDATE users SET is_admin = true WHERE email = ${email("dan")}`;
+  check("l'administrateur voit le compteur", (await dan("/api/me")).data.open_reports === 4, (await dan("/api/me")).data.open_reports);
+  check("un membre n'a pas de compteur", (await eve("/api/me")).data.open_reports === 0);
+  const queueOpen = (await dan("/api/moderation")).data.reports;
+  check("4 signalements ouverts", queueOpen.length === 4, queueOpen.length);
+  const person = queueOpen.find((r) => r.kind === "person");
+  check("la conversation est jointe", person.target === "Bob" && person.messages.length > 0, person);
+  const tombReport = queueOpen.find((r) => r.kind === "tomb");
+  check("classer rend la tombe", (await dan("/api/moderation/resolve", { reportId: tombReport.id, action: "dismiss" })).status === 200 && (await deckIds(gina)).length >= 0);
+  check("la tombe revient au cimetière", (await anon("/api/graveyard")).data.tombs.some((t) => t.name === "Seconde"));
+  check("classer ferme ses signalements", (await dan("/api/moderation")).data.reports.length === 1);
+  check("traiter deux fois = 409", (await dan("/api/moderation/resolve", { reportId: tombReport.id, action: "dismiss" })).status === 409);
+
+  // retirer une tombe : d'abord un nouveau signalement, sur la tombe de Frank
+  await frank("/api/burials", tomb("À retirer"));
+  const toRemove = (await frank("/api/my-tombs")).data.tombs[0];
+  await gina("/api/reports", { kind: "tomb", tombId: toRemove.id, reason: "offensive" });
+  const removeReport = (await dan("/api/moderation")).data.reports.find((r) => r.tomb === "À retirer");
+  check("retirer la tombe", (await dan("/api/moderation/resolve", { reportId: removeReport.id, action: "remove" })).status === 200);
+  check("la tombe a disparu", !(await deckIds(eve)).includes(toRemove.id));
+  check("retirer une personne n'a pas de sens", (await dan("/api/moderation/resolve", { reportId: person.id, action: "remove" })).status === 400);
+
+  // bloquer : Bob est reconnecté d'abord pour vérifier que sa session tombe
+  const bobAgain = client();
+  await bobAgain("/api/login", { email: email("bob"), password: PASSWORD });
+  await eve("/api/burials", tomb("Tombe d'Eve"));
+  const eveTomb = (await eve("/api/my-tombs")).data.tombs[0];
+  await bob("/api/swipes", { tombId: eveTomb.id, action: "revive", note: "Je reprends aussi celle-ci." });
+  const eveMatch = await eve("/api/requests/decide", { tombId: eveTomb.id, userId: queue.find((r) => r.name === "Bob").user_id, decision: "accept" });
+  check("Bob entre en veillée avec Eve", eveMatch.status === 201, eveMatch.data);
+  check("bloquer Bob", (await dan("/api/moderation/resolve", { reportId: person.id, action: "ban" })).status === 200);
+  check("sa session tombe", (await bobAgain("/api/me")).data.user === null);
+  check("il ne peut plus se connecter", (await client()("/api/login", { email: email("bob"), password: PASSWORD })).status === 403);
+  check("sa veillée en cours se ferme", (await eve(`/api/vigil?id=${eveMatch.data.match.id}`)).data.vigil.end_reason === "banned");
+  check("une reprise conclue ne se ferme pas", (await ana(`/api/vigil?id=${matchId}`)).data.vigil.revived_at !== null && (await ana(`/api/vigil?id=${matchId}`)).data.vigil.ended_at === null);
+
+  // un administrateur ne peut pas être bloqué
+  await dan("/api/burials", tomb("Tombe de Dan"));
+  const danTomb = (await dan("/api/my-tombs")).data.tombs.find((t) => t.name === "Tombe de Dan");
+  await gina("/api/reports", { kind: "tomb", tombId: danTomb.id, reason: "fake" });
+  const danReport = (await dan("/api/moderation")).data.reports.find((r) => r.tomb === "Tombe de Dan");
+  check("un administrateur ne se bloque pas", (await dan("/api/moderation/resolve", { reportId: danReport.id, action: "ban" })).status === 409);
+
   // publication
   check("publier la tombe privée", (await ana("/api/tombs/visibility", { tombId: priv.id, visible: true })).status === 200);
-  check("elle arrive dans la pile", (await deckIds(bob)).includes(priv.id));
+  check("elle arrive dans la pile", (await deckIds(cam)).includes(priv.id));
 
   // profil
-  check("profil enregistré", (await bob("/api/profile", { name: "Bobby", skills: "Go", bio: "Bonjour" })).status === 200);
-  check("nom trop court = 400", (await bob("/api/profile", { name: "B" })).status === 400);
-  check("profil relu", (await bob("/api/me")).data.user.bio === "Bonjour");
+  check("profil enregistré", (await cam("/api/profile", { name: "Camille", skills: "Go", bio: "Bonjour" })).status === 200);
+  check("nom trop court = 400", (await cam("/api/profile", { name: "B" })).status === 400);
+  check("profil relu", (await cam("/api/me")).data.user.bio === "Bonjour");
 
   // origine et piège à robots
   check("autre origine = 403", (await ana("/api/swipes", { tombId: priv.id, action: "flower" }, { origin: "https://exemple-pirate.com" })).status === 403);
@@ -174,8 +325,8 @@ async function run() {
   check("le piège fait semblant", trap.status === 200 && !trap.setCookie);
 
   // déconnexion
-  check("déconnexion", (await bob("/api/logout", {})).status === 200);
-  check("session fermée", (await bob("/api/me")).data.user === null);
+  check("déconnexion", (await cam("/api/logout", {})).status === 200);
+  check("session fermée", (await cam("/api/me")).data.user === null);
 
   // brute force, en dernier : bloque cette adresse pour 15 minutes
   const guess = client();

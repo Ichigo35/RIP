@@ -29,3 +29,9 @@ out.addEventListener("click", async () => {
 });
 
 $("#view").append(form, out);
+if (me.user.is_admin) {
+  const moderate = el("a", "btn btn-ghost", me.open_reports ? `Modération (${me.open_reports})` : "Modération");
+  moderate.href = "/moderation";
+  $("#view").append(el("p", "profile-admin"));
+  $(".profile-admin").append(moderate);
+}

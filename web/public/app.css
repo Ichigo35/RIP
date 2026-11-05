@@ -200,3 +200,86 @@ dialog.revit[open]{display:grid;place-items:center;overflow:auto}
   .r-stem{stroke-dashoffset:0;animation:none}
   .r-leaf{transform:none;animation:none}
 }
+
+/* signaler une tombe */
+.card .tomb{position:relative}
+.flag{position:absolute;right:8px;bottom:6px;display:grid;place-items:center;width:38px;height:38px;padding:0;background:none;border:0;border-radius:50%;color:#8F9096;cursor:pointer}
+.flag:hover{color:var(--or2)}
+.flag svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+
+/* la veillée */
+.vigil{display:grid;grid-template-columns:minmax(240px,300px) minmax(0,1fr);gap:clamp(20px,3vw,40px);padding-top:8px;padding-bottom:24px}
+.vigil-side{display:grid;gap:20px;align-content:start}
+.vigil-back{font-size:15px;color:var(--gris);text-underline-offset:3px}
+.vigil-time{display:grid;justify-items:center;text-align:center}
+.candle{width:96px;overflow:visible}
+.candle .wax{fill:#F8F8F5;stroke:#C9C9C3}
+.candle .wick{stroke:var(--noir);stroke-width:2.5;stroke-linecap:round}
+.candle .plate{fill:var(--noir)}
+.candle .flame{fill:var(--or);transform-box:fill-box;transform-origin:50% 100%;animation:flicker 2.8s ease-in-out infinite}
+@keyframes flicker{0%,100%{transform:scale(1)}40%{transform:scale(.95,1.05)}70%{transform:scale(1.04,.97)}}
+.vigil-time .risen{width:120px}
+.vigil-time .r-stone{fill:var(--noir)}
+.vigil-time .r-base{fill:var(--noir2)}
+.vigil-days{font:400 clamp(36px,4.4vw,46px)/1.05 var(--display);margin-top:10px}
+.vigil-left{color:var(--gris);font-size:15.5px}
+.vigil-who{display:grid;gap:4px;padding-top:16px;border-top:1px solid var(--trait)}
+.vigil-tomb{font-size:27px;overflow-wrap:anywhere}
+.vigil-with{font-weight:600}
+.vigil-acts{display:grid;gap:10px}
+.seal-note,.vigil-wait{font-size:14.5px;color:var(--gris)}
+.vigil-wait{color:var(--pousse);font-weight:600}
+.vigil-links{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.vigil-links .link{font-size:14.5px;color:var(--gris);font-weight:500}
+.vigil-panel{display:flex;flex-direction:column;height:calc(100dvh - 104px);min-height:440px;padding:0;border:1px solid #D3D3CD;border-radius:20px;background:var(--marbre);overflow:hidden}
+.thread{flex:1;min-height:0;display:flex;flex-direction:column;gap:12px;padding:clamp(16px,3vw,26px);overflow-y:auto}
+.thread:focus-visible{outline-offset:-3px}
+.msg{align-self:flex-start;max-width:min(78%,560px);display:grid;gap:3px}
+.msg-mine{align-self:flex-end;justify-items:end}
+.msg-body{padding:10px 14px;border-radius:14px 14px 14px 4px;background:#E7E7E1;white-space:pre-wrap;overflow-wrap:anywhere}
+.msg-mine .msg-body{border-radius:14px 14px 4px 14px;background:var(--noir);color:#EEEBE3}
+.msg-time,.msg-label{font-size:12.5px;color:var(--gris)}
+.msg-note .msg-body{font-style:italic}
+.thread-hint{margin:auto;color:var(--gris);text-align:center}
+.thread-closed{padding:14px 20px;border-top:1px solid #E1E1DB;color:var(--gris);text-align:center}
+.composer{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:end;padding:12px;border-top:1px solid #E1E1DB}
+.composer textarea{resize:none;max-height:140px}
+.composer .btn{padding:14px 22px}
+.composer .form-err{grid-column:1/-1;font-size:14.5px}
+.composer .form-err:empty{display:none}
+.past{margin-top:12px;font-size:15px;color:var(--gris)}
+.plot-queue>.btn{margin-top:14px}
+.profile-admin{margin-top:18px}
+
+/* modération */
+.reports{margin-top:26px}
+.report-list{list-style:none;border:1px solid #D3D3CD;border-radius:16px;background:var(--marbre)}
+.report{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:18px;padding:20px 22px;align-items:start}
+.report+.report{border-top:1px solid #E1E1DB}
+.report h2{font-size:24px;overflow-wrap:anywhere}
+.report-details{margin-top:8px;overflow-wrap:anywhere}
+.report-thread{list-style:none;display:grid;gap:6px;margin-top:10px;padding:12px 14px;border-radius:10px;background:#E7E7E1;font-size:15px;overflow-wrap:anywhere}
+.report-acts{display:grid;gap:10px;justify-items:stretch;text-align:center}
+.report-acts .btn{padding:11px 16px;font-size:15px}
+
+@media (max-width:760px){
+  .vigil{display:flex;flex-direction:column;gap:8px;height:calc(100dvh - 60px - 54px - env(safe-area-inset-bottom));padding-top:0;padding-bottom:8px}
+  .vigil-side{grid-template-columns:auto minmax(0,1fr);gap:0 12px;align-items:center}
+  .vigil-back,.seal-note,.vigil-who .tags,.vigil-who .request-bio{display:none}
+  .vigil-time{grid-row:span 2;justify-items:center}
+  .candle{width:34px}
+  .vigil-time .risen{width:44px}
+  .vigil-days{font-size:17px;margin-top:2px}
+  .vigil-left{display:none}
+  .vigil-who{padding-top:0;border:0;gap:0}
+  .vigil-tomb{font-size:21px}
+  .vigil-with{font-size:14.5px}
+  .vigil-acts{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px}
+  .vigil-acts .btn{padding:8px 14px;font-size:14px}
+  .vigil-wait{font-size:13.5px}
+  .vigil-links{gap:12px}
+  .vigil-panel{flex:1;height:auto;min-height:0}
+  .msg{max-width:88%}
+  .report{grid-template-columns:minmax(0,1fr)}
+}
+@media (prefers-reduced-motion:reduce){.candle .flame{animation:none}}

@@ -32,8 +32,11 @@ function queueEl(t) {
   const col = el("div", "plot-queue");
   const n = t.requests.length;
   if (t.match_id) {
-    col.append(el("h2", null, `Il revit avec ${t.reviver_name}`));
-    col.append(el("p", "sub", "La veillée de 14 jours arrive bientôt. Ta tombe a quitté le cimetière pendant la reprise."));
+    col.append(el("h2", null, t.revived_at ? `Ressuscité avec ${t.reviver_name}` : `En veillée avec ${t.reviver_name}`));
+    col.append(el("p", "sub", t.revived_at ? "Vous avez conclu la reprise." : `Encore ${plural(t.days_left, "jour")} pour vous mettre d'accord. Ta tombe a quitté le cimetière pendant ce temps.`));
+    const open = el("a", "btn btn-go", t.unread ? `Ouvrir la veillée (${t.unread})` : "Ouvrir la veillée");
+    open.href = `/veillee?id=${t.match_id}`;
+    col.append(open);
     if (n) col.append(el("h3", null, `${plural(n, "autre demande")} en file`));
   } else if (n) {
     col.append(el("h2", null, n > 1 ? `${n} personnes veulent le ressusciter` : "1 personne veut le ressusciter"));
@@ -47,6 +50,13 @@ function queueEl(t) {
     col.append(list);
   }
   if (n && !t.match_id) col.append(el("p", "sheet-note", "Si tu déclines, un merci part tout seul."));
+  for (const past of t.past) {
+    const line = el("p", "past");
+    const read = el("a", null, "Relire");
+    read.href = `/veillee?id=${past.id}`;
+    line.append(`Veillée terminée avec ${past.name}. `, read);
+    col.append(line);
+  }
   return col;
 }
 
@@ -56,7 +66,9 @@ function plotEl(t) {
   stone.append(tombFace(t, "h2"), el("div", "plinth"));
   const meta = el("div", "plot-meta");
   meta.append(el("span", null, t.flowers ? plural(t.flowers, "fleur") : "Pas encore de fleur"));
-  if (!t.match_id) {
+  if (t.hidden) {
+    meta.append(el("b", null, "Retirée par la modération"));
+  } else if (!t.match_id) {
     const toggle = Object.assign(el("button", "link", t.visible ? "Retirer du cimetière" : "Publier ma tombe"), { type: "button" });
     toggle.addEventListener("click", async () => {
       const { ok, data } = await api("/api/tombs/visibility", { tombId: t.id, visible: !t.visible });
@@ -84,8 +96,8 @@ async function decide(t, r, decision) {
     showMatch({
       sentence: `${r.name} va ressusciter ${t.name} avec toi.`,
       other: r.name,
-      primary: { label: "Voir mes tombes", href: "/mes-tombes" },
-      secondary: { label: "Aller au cimetière", href: "/cimetiere" },
+      primary: { label: "Ouvrir la veillée", href: `/veillee?id=${data.match.id}` },
+      secondary: { label: "Revenir à mes tombes", href: "/mes-tombes" },
     });
   }
 }

@@ -1,7 +1,7 @@
 import type { NeonQueryFunction } from "@neondatabase/serverless";
 
 export type Sql = NeonQueryFunction<false, false>;
-export type User = { id: string; email: string; name: string; skills: string; bio: string };
+export type User = { id: string; email: string; name: string; skills: string; bio: string; is_admin: boolean };
 
 // 100 000 itérations : le maximum accepté par les Workers pour PBKDF2.
 const ITERATIONS = 100_000;
@@ -54,8 +54,8 @@ export async function currentUser(req: Request, sql: Sql): Promise<User | null> 
   const token = sessionToken(req);
   if (!token) return null;
   const rows = await sql`
-    SELECT u.id, u.email, u.name, u.skills, u.bio FROM sessions s JOIN users u ON u.id = s.user_id
-    WHERE s.token_hash = ${await sha256(token)} AND s.expires_at > now()`;
+    SELECT u.id, u.email, u.name, u.skills, u.bio, u.is_admin FROM sessions s JOIN users u ON u.id = s.user_id
+    WHERE s.token_hash = ${await sha256(token)} AND s.expires_at > now() AND u.banned_at IS NULL`;
   return (rows[0] as User) ?? null;
 }
 

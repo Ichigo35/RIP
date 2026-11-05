@@ -6,9 +6,11 @@ export const CAUSES = {
   competitor: "Concurrent trop fort", technical: "Blocage technique", life_change: "Changement de vie",
 };
 export const WILLS = { cofound: "Cofonder", handover: "Transmettre", sell: "Céder", release: "Libérer" };
+export const REPORT_TOMB = { offensive: "Contenu choquant", fake: "Arnaque ou fausse tombe", stolen: "Ce projet n'est pas le sien", other: "Autre chose" };
+export const REPORT_PERSON = { harassment: "Harcèlement ou insultes", scam: "Arnaque", other: "Autre chose" };
 export const SPROUT = '<svg class="sprout" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 20h10M10 20c5.5-2.5.8-6.4 3-10M9.5 9.4c1.1.8 1.8 2.2 2.3 3.7-2 .4-3.5.4-4.8-.3-1.2-.6-2.3-1.9-3-4.2 2.8-.5 4.4 0 5.5.8zm4.8-3.9c1.8-.4 3.7-.1 5.2.9-.4 2.2-1.4 3.4-2.7 4-1 .5-2.2.5-3.6.1.1-1.8.6-3.7 1.1-5z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 const LOGO = '<svg width="30" height="30" viewBox="0 0 64 64" aria-hidden="true"><path d="M15 62V36a17 17 0 0 1 34 0v26z" fill="#232428"/><rect x="11" y="58" width="42" height="5" rx="1.5" fill="#1A1B1E"/><path d="M32 19.5V8" stroke="#3F8F3A" stroke-width="3.2" stroke-linecap="round"/><path d="M31.5 13.5c-2.6-6.2-9.4-7.7-14-5.6 2 5.2 8.3 8 14 5.6z" fill="#3F8F3A"/><path d="M32.5 10.5c2.6-6.2 9.4-7.7 14-5.6-2 5.2-8.3 8-14 5.6z" fill="#5DAE4E"/></svg>';
-const RISEN = '<svg class="risen" viewBox="0 0 200 240" aria-hidden="true"><path class="r-stone" d="M42 222V104a58 58 0 0 1 116 0v118z"/><rect class="r-base" x="26" y="218" width="148" height="12" rx="3"/><path class="r-crack" d="M100 222l-7-24 11-20-9-22 7-18"/><path class="r-stem" d="M100 190c-5-40 7-74 0-172"/><path class="r-leaf r-leaf1" d="M100 92c-16-12-34-12-46-2 12 16 34 18 46 2z"/><path class="r-leaf r-leaf2" d="M101 46c14-14 32-16 46-8-10 18-32 22-46 8z"/></svg>';
+export const RISEN = '<svg class="risen" viewBox="0 0 200 240" aria-hidden="true"><path class="r-stone" d="M42 222V104a58 58 0 0 1 116 0v118z"/><rect class="r-base" x="26" y="218" width="148" height="12" rx="3"/><path class="r-crack" d="M100 222l-7-24 11-20-9-22 7-18"/><path class="r-stem" d="M100 190c-5-40 7-74 0-172"/><path class="r-leaf r-leaf1" d="M100 92c-16-12-34-12-46-2 12 16 34 18 46 2z"/><path class="r-leaf r-leaf2" d="M101 46c14-14 32-16 46-8-10 18-32 22-46 8z"/></svg>';
 
 export const $ = (s, r = document) => r.querySelector(s);
 
@@ -185,9 +187,10 @@ export async function shell(active) {
     const a = el("a", null, label);
     a.href = href;
     if (href === active) a.setAttribute("aria-current", "page");
-    if (href === "/mes-tombes" && me.requests > 0) {
-      const badge = el("span", "badge", me.requests);
-      badge.setAttribute("aria-label", `${plural(me.requests, "demande")} en attente`);
+    const waiting = me && { "/mes-tombes": me.requests + me.unread_tombs, "/reprises": me.unread_reprises, "/profil": me.open_reports }[href];
+    if (waiting > 0) {
+      const badge = el("span", "badge", waiting);
+      badge.setAttribute("aria-label", `${plural(waiting, "nouveauté")}`);
       a.append(badge);
     }
     tabs.append(a);
@@ -208,10 +211,11 @@ export async function shell(active) {
   if (me?.unseen_match) {
     const { id, tomb, creator } = me.unseen_match;
     api("/api/matches/seen", { matchId: id });
-    showMatch({
+    /* Déjà dans cette veillée : rien à annoncer. */
+    if (!(location.pathname === "/veillee" && location.search.includes(id))) showMatch({
       sentence: `${creator} a accepté ta demande : ${tomb} repart avec toi.`,
       other: creator,
-      primary: { label: "Voir mes reprises", href: "/reprises" },
+      primary: { label: "Ouvrir la veillée", href: `/veillee?id=${id}` },
       secondary: { label: "Continuer à swiper", href: "/cimetiere" },
     });
   }
@@ -259,8 +263,35 @@ export function askConfirm({ title, text, ok, quiet }) {
   return opened(d, () => yes);
 }
 
-/** L'écran « Il revit ! ». */
-export function showMatch({ sentence, other, primary, secondary }) {
+/** Signalement d'une tombe ou d'une personne. Rend { reason, details } ou null. */
+export function askReport({ title, text, reasons }) {
+  let answer = null;
+  const d = sheet(title, text);
+  const form = el("form", "sheet-form");
+  form.noValidate = true;
+  const choices = el("fieldset", "f wills");
+  choices.append(el("legend", null, "Motif"));
+  for (const [value, label] of Object.entries(reasons)) {
+    const option = el("label", "will");
+    option.append(Object.assign(el("input"), { type: "radio", name: "reason", value }), el("span", null, label));
+    choices.append(option);
+  }
+  const details = field("Précisions", { name: "details", rows: 3, maxLength: 500 }, "(facultatif)");
+  const submit = Object.assign(el("button", "btn btn-go btn-big", "Envoyer le signalement"), { type: "submit" });
+  form.append(choices, details, submit, el("p", "form-err"));
+  d.append(form);
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    clearErrors(form);
+    if (!form.elements.reason.value) return showError(form, { error: "Choisis un motif." });
+    answer = { reason: form.elements.reason.value, details: form.elements.details.value.trim() };
+    d.close();
+  });
+  return opened(d, () => answer);
+}
+
+/** L'écran « Il revit ! », repris pour annoncer qu'une tombe est ressuscitée. */
+export function showMatch({ title = "Il revit !", sentence, other, soon = "Vous avez 14 jours pour vous parler.", primary, secondary }) {
   const d = el("dialog", "revit");
   const box = el("div", "revit-box");
   box.insertAdjacentHTML("beforeend", RISEN);
@@ -268,7 +299,7 @@ export function showMatch({ sentence, other, primary, secondary }) {
   pair.append(el("span", "disc disc-other", other.slice(0, 1).toUpperCase()), el("span", "pair-line"), el("span", "disc disc-me", "Toi"));
   const go = el("a", "btn btn-go btn-big", primary.label);
   go.href = primary.href;
-  box.append(el("h2", null, "Il revit !"), el("p", "revit-text", sentence), pair, el("p", "revit-soon", "La veillée de 14 jours arrive bientôt."), go);
+  box.append(el("h2", null, title), el("p", "revit-text", sentence), pair, el("p", "revit-soon", soon), go);
   if (secondary) {
     const next = el("a", "revit-next", secondary.label);
     next.href = secondary.href;
