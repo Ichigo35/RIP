@@ -25,7 +25,7 @@ conversations Claude Code.
 - Le parcours complet fonctionne en ligne : enterrer, swiper, choisir, match, veillée, conclure.
 - Le site reste un MVP sans domaine (décision de l'utilisateur) : pas d'e-mails, donc pas de mot de passe oublié ni d'alertes.
 - Le cimetière est vide : l'utilisateur n'a pas de projet abandonné à y mettre.
-- Personne n'est encore administrateur : l'utilisateur a choisi l'e-mail de son compte, mais le compte n'existe pas encore. Il doit le créer lui-même, puisque c'est lui qui choisit le mot de passe.
+- L'utilisateur a créé son compte lui-même (09:50) et il est administrateur : c'est le premier vrai compte du site.
 - Décisions ouvertes : tombes d'exemple pour le cimetière vide, langue FR + EN, renommer le dossier local, suite à donner (pacte type, Médium, filtres).
 
 ---
