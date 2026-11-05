@@ -1,0 +1,202 @@
+/* Écrans de l'app : navigation, swipe, mes tombes, reprises, dialogues, « Il revit ! ». */
+[hidden]{display:none!important}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+.link{background:none;border:0;font:600 15.5px/1.3 var(--text);color:inherit;text-decoration:underline;text-underline-offset:3px;cursor:pointer;padding:6px 0}
+.disc{flex:none;display:grid;place-items:center;width:44px;height:44px;border-radius:50%;background:var(--poussebg);color:var(--pousse);font:400 20px/1 var(--display)}
+
+/* navigation */
+.tabs{display:flex;align-items:center;gap:22px}
+.tabs a[aria-current=page]{text-decoration:underline;text-decoration-color:var(--chrys);text-decoration-thickness:2px;text-underline-offset:7px}
+.tabs .link{font-size:17px;text-decoration:none}
+.tabs .link:hover{text-decoration:underline}
+.badge{display:inline-grid;place-items:center;min-width:20px;height:20px;padding:0 6px;margin-left:6px;border-radius:999px;background:var(--chrys);color:#fff;font-size:12.5px;line-height:1}
+
+/* le cimetière à swiper */
+.deck{display:grid;justify-items:center;gap:18px;padding-top:12px;padding-bottom:26px;overflow-x:clip}
+.deck-row{display:grid;grid-template-columns:1fr minmax(0,440px) 1fr;align-items:center;gap:clamp(12px,3vw,44px);width:100%}
+.side{font-family:var(--display);font-size:clamp(20px,2vw,25px);color:var(--gris)}
+.side-rest{text-align:right}
+.side-go{color:var(--pousse)}
+.stack{position:relative;display:grid;width:100%;min-height:380px;align-items:end}
+.stack.has-next::before{content:"";position:absolute;inset:-12px 18px 16px;background:#3A3C42;border-radius:50% 50% 12px 12px/110px 110px 12px 12px}
+.card{position:relative;touch-action:none;cursor:grab;user-select:none;-webkit-user-select:none;transition:transform .25s cubic-bezier(.2,.8,.2,1);animation:forward .25s ease-out}
+.card.dragging{transition:none;cursor:grabbing}
+.card.tall{touch-action:pan-y}
+.card.leaving{transition:transform .32s ease-in}
+.leaving-revive{--go:1}
+.leaving-rest{--rest:1}
+.leaving-flower{--flower:1}
+@keyframes forward{from{transform:translateY(-10px) scale(.965)}}
+.card .tomb{padding:clamp(38px,5vh,52px) clamp(20px,3vw,30px) 24px}
+.card .sprout{transform:scale(calc(1 + var(--go,0)*1.9));transform-origin:50% 100%;transition:transform .12s linear}
+.card .engr{font-size:clamp(27px,3.4vw,36px)}
+.card.long-name .engr{font-size:clamp(21px,2.5vw,26px)}
+.facts{text-align:left;margin:6px 8px 0}
+.facts dt{color:var(--or2);font-size:14px;margin-top:9px}
+.facts dd{color:#EEEBE3;font-size:15.5px;line-height:1.35;overflow-wrap:anywhere}
+.clamp{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.more{background:none;border:0;color:var(--or2);font:600 14px/1.2 var(--text);text-decoration:underline;text-underline-offset:3px;cursor:pointer;padding:6px 0 0}
+.chip-life{background:var(--pousse);color:#fff}
+.card .chips{margin-top:14px}
+.card .chip{max-width:100%;overflow-wrap:anywhere}
+.card .chip-miss{border-radius:14px}
+.stamp{position:absolute;top:34%;z-index:2;padding:8px 14px;border:3px solid;border-radius:8px;background:rgba(26,27,30,.8);font:400 clamp(23px,3vw,31px)/1 var(--display);opacity:0;pointer-events:none}
+.stamp-go{left:12px;rotate:-10deg;color:#8FD97F;opacity:var(--go,0)}
+.stamp-rest{right:12px;rotate:10deg;color:#D9D9D3;opacity:var(--rest,0)}
+.stamp-flower{left:50%;translate:-50% 0;color:#E9BDE0;opacity:var(--flower,0)}
+.acts{display:flex;justify-content:center;align-items:flex-end;gap:clamp(10px,3vw,30px)}
+.act{display:grid;justify-items:center;gap:7px;width:136px;padding:4px;background:none;border:0;border-radius:14px;font:600 14.5px/1.2 var(--text);color:var(--encre);cursor:pointer}
+.act .dot{width:58px;height:58px;transition:transform .15s}
+.act:hover .dot{transform:translateY(-2px)}
+.act-big .dot{width:76px;height:76px}
+.act-big .dot svg{width:36px;height:36px}
+.act .dot-flower svg,.act .dot-rest svg{width:28px;height:28px}
+.act kbd{padding:3px 7px;border:1px solid var(--trait);border-radius:5px;background:var(--marbre);color:var(--gris);font:500 12px/1 var(--text)}
+.count{color:var(--gris);font-size:15px;min-height:1.4em}
+.deck-empty{display:grid;justify-items:center;gap:12px;padding:64px 28px 34px;border-radius:50% 50% 14px 14px/110px 110px 14px 14px;background:var(--noir);color:#E7E4DB;text-align:center}
+.deck-empty h2{color:var(--or2);font-size:clamp(25px,3vw,31px)}
+.deck-empty .cta{justify-content:center;margin-top:10px}
+.deck-empty .btn-ghost{box-shadow:inset 0 0 0 1.5px var(--or2);color:var(--or2)}
+.deck-empty .btn-ghost:hover{background:rgba(255,255,255,.08)}
+
+/* pages */
+.page{padding-top:clamp(16px,3vw,32px);padding-bottom:56px}
+.page h1{font-size:clamp(36px,5vw,54px)}
+.page-narrow{max-width:640px}
+.page>.sub{margin-top:6px;max-width:38em}
+.page .empty{display:grid;gap:14px;justify-items:center}
+
+/* mes tombes : la pierre debout à gauche, la file à droite */
+.plots{display:grid;gap:clamp(34px,5vw,54px);margin-top:30px}
+.plot{display:grid;grid-template-columns:minmax(230px,300px) minmax(0,1fr);gap:clamp(20px,4vw,48px);align-items:start;padding:0}
+.plot-stone .tomb{padding:44px 18px 22px;border-radius:50% 50% 10px 10px/84px 84px 10px 10px}
+.plot-stone .tomb .sprout{width:22px;height:22px}
+.plot-stone .engr{font-size:23px}
+.plot-stone .epitaph{font-size:15px}
+.plot-stone .plinth{height:12px;margin:0 -8px}
+.plot-meta{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-top:12px;font-size:15px;color:var(--gris)}
+.plot-meta .link{color:var(--encre);font-size:15px}
+.plot-queue{padding:clamp(20px,3vw,30px);border:1px solid #D3D3CD;border-radius:20px;background:var(--marbre)}
+.plot-queue h2{font-size:clamp(23px,2.6vw,28px)}
+.plot-queue h3{font:600 16px/1.3 var(--text);margin-top:20px}
+.plot-queue .sub{margin-top:6px}
+.requests{list-style:none;margin-top:14px}
+.request{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:14px;padding:18px 0;border-top:1px solid #E1E1DB;align-items:start}
+.request-who b{font-size:17px}
+.tags{list-style:none;display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.tags .chip{background:#E7E7E1;color:var(--encre);padding:3px 10px;font-size:13.5px}
+.request-note{font-style:italic;margin-top:8px;overflow-wrap:anywhere}
+.request-bio{color:var(--gris);font-size:15px;margin-top:6px;overflow-wrap:anywhere}
+.request-acts{display:flex;align-items:center;justify-content:flex-end;flex-wrap:wrap;gap:10px 16px}
+.request-acts .btn{padding:11px 18px;font-size:15px}
+
+/* mes reprises */
+.groups{display:grid;gap:34px;margin-top:28px}
+.group{padding:0}
+.group h2{font-size:26px;margin-bottom:12px}
+.reprises{list-style:none;border:1px solid #D3D3CD;border-radius:16px;background:var(--marbre)}
+.reprise{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:16px;padding:18px 22px;align-items:center}
+.reprise+.reprise{border-top:1px solid #E1E1DB}
+.reprise-name{font-size:23px}
+.reprise-dates{color:var(--gris);font-size:14px;letter-spacing:.08em}
+.reprise-text{margin-top:4px}
+
+/* profil */
+.profile{display:grid;gap:20px;margin:26px 0 18px;padding:clamp(20px,3vw,30px);border:1px solid #D3D3CD;border-radius:20px;background:var(--marbre)}
+.profile .btn{justify-self:start}
+.profile-email{color:var(--gris);font-size:15.5px}
+
+/* dialogues */
+dialog.sheet{margin:auto;width:min(460px,calc(100vw - 32px));max-height:calc(100dvh - 32px);padding:clamp(22px,4vw,32px);border:0;border-radius:20px;background:var(--marbre);color:var(--encre)}
+dialog.sheet::backdrop{background:rgba(26,27,30,.62)}
+.sheet h2{font-size:29px;padding-right:32px}
+.sheet-text{color:var(--gris);margin-top:6px}
+.sheet-form{display:grid;gap:16px;margin-top:18px}
+.sheet-form .btn{width:100%}
+.sheet-form .link{justify-self:center}
+.sheet-form .form-err:empty{display:none}
+.sheet-note{color:var(--gris);font-size:14.5px}
+.plot-queue .sheet-note{margin-top:4px}
+.sheet-row{display:flex;align-items:center;gap:18px;margin-top:20px}
+.sheet-x{position:absolute;top:10px;right:12px;width:40px;height:40px;background:none;border:0;color:var(--gris);font-size:27px;line-height:1;cursor:pointer}
+
+/* il revit */
+dialog.revit{position:fixed;inset:0;width:100%;height:100%;max-width:none;max-height:none;margin:0;border:0;color:#E7E4DB;background-color:var(--noir);background-image:radial-gradient(rgba(255,255,255,.075) .8px,transparent 1.3px),radial-gradient(rgba(255,255,255,.045) .8px,transparent 1.3px);background-size:8px 8px,13px 13px;background-position:0 0,4px 6px}
+dialog.revit[open]{display:grid;place-items:center;overflow:auto}
+.revit-box{display:grid;justify-items:center;gap:14px;max-width:540px;padding:24px;text-align:center}
+.revit h2{color:var(--or2);font-size:clamp(58px,9vw,94px)}
+.revit-text{font-size:clamp(18px,2.2vw,21px)}
+.risen{width:clamp(120px,22vh,180px);overflow:visible}
+.r-stone{fill:#1A1B1E;stroke:var(--or);stroke-opacity:.6;stroke-width:1.5}
+.r-base{fill:#111214}
+.r-crack{fill:none;stroke:#5C5E64;stroke-width:2}
+.r-stem{fill:none;stroke:#6CBF5C;stroke-width:6;stroke-linecap:round;stroke-dasharray:190;stroke-dashoffset:190;animation:grow 1s .2s ease-out forwards}
+.r-leaf{fill:#6CBF5C;transform-box:fill-box;transform:scale(0);animation:unfold .45s ease-out forwards}
+.r-leaf1{transform-origin:100% 40%;animation-delay:.75s}
+.r-leaf2{fill:#8FD97F;transform-origin:0 50%;animation-delay:.95s}
+@keyframes grow{to{stroke-dashoffset:0}}
+@keyframes unfold{to{transform:scale(1)}}
+.pair{display:flex;align-items:center;margin:6px 0}
+.pair .disc{width:56px;height:56px;font-size:24px}
+.pair-line{width:clamp(70px,14vw,120px);height:1.5px;background:var(--or)}
+.pair .disc-me{background:#ECEBE4;color:var(--noir);font-size:17px}
+.revit-soon{font-style:italic;color:var(--or2)}
+.revit .btn{margin-top:6px}
+.revit-next{color:#D2CEC3;font-weight:600;text-underline-offset:3px}
+
+.toast{position:fixed;left:50%;bottom:22px;translate:-50% 0;z-index:30;display:flex;align-items:center;gap:16px;width:max-content;max-width:calc(100vw - 32px);padding:12px 18px;border-radius:12px;background:var(--noir);color:#EEEBE3;font-size:15.5px}
+.toast button{flex:none;padding:4px 0;background:none;border:0;color:var(--or2);font:600 15.5px/1.2 var(--text);text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+
+@media (max-width:760px){
+  .side{display:none}
+  .deck-row{grid-template-columns:minmax(0,420px);justify-content:center}
+  .plot{grid-template-columns:minmax(0,1fr)}
+  .plot-stone{justify-self:center;width:min(300px,100%)}
+  .request{grid-template-columns:44px minmax(0,1fr)}
+  .request-acts{grid-column:1/-1;justify-content:flex-start}
+  .reprise{grid-template-columns:minmax(0,1fr)}
+  .reprise .request-acts{justify-content:flex-start}
+  .tabs{position:fixed;left:0;right:0;bottom:0;z-index:10;display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:0;padding-bottom:env(safe-area-inset-bottom);border-top:1px solid var(--trait);background:var(--marbre)}
+  .tabs a{padding:15px 4px;text-align:center;font-size:14.5px;text-decoration:none}
+  .tabs a[aria-current=page]{color:var(--chrys);text-decoration:none}
+  .badge{min-width:18px;height:18px;margin-left:3px;padding:0 5px}
+  .tabs-out{position:static;display:flex;border:0;background:none;padding:0}
+  .tabs-out a{display:none}
+  .has-tabs{padding-bottom:calc(54px + env(safe-area-inset-bottom))}
+  .toast{top:10px;bottom:auto}
+  .top{padding-top:10px;padding-bottom:10px}
+  .deck{gap:10px;padding-top:2px;padding-bottom:0}
+  .stack{min-height:0}
+  .stack.has-next::before{border-radius:50% 50% 12px 12px/76px 76px 12px 12px;inset:-9px 16px 12px}
+  .card .tomb{padding:28px 16px 16px;border-radius:50% 50% 12px 12px/76px 76px 12px 12px}
+  .card .tomb .sprout{width:22px;height:22px}
+  .card .engr{font-size:25px;margin-top:4px}
+  .card.long-name .engr{font-size:20px}
+  .card .dates{font-size:13px;margin-top:4px}
+  .card .epitaph{font-size:15.5px;margin-top:8px}
+  .card .tomb hr{margin:12px 8px 2px}
+  .card .plinth{height:12px;margin:0 -8px}
+  .facts dt{font-size:13px;margin-top:6px}
+  .facts dd{font-size:14.5px}
+  .clamp{-webkit-line-clamp:2}
+  .card .chips{margin-top:10px}
+  .card .chip{padding:4px 10px;font-size:13px}
+  .acts{position:sticky;bottom:0;z-index:5;width:calc(100% + 2*var(--gutter));padding:8px 0 10px;background:var(--granit)}
+  .has-tabs .acts{bottom:calc(50px + env(safe-area-inset-bottom))}
+  .act{width:auto;min-width:96px;gap:3px;font-size:12.5px}
+  .act .dot{width:48px;height:48px}
+  .act-big .dot{width:58px;height:58px}
+  .count{display:none}
+}
+@media (max-width:560px){
+  .top nav{gap:12px}
+  .top .btn-small{padding:10px 14px;font-size:14px;white-space:nowrap}
+  .tabs-out .link{font-size:15px;white-space:nowrap}
+}
+@media (max-width:380px){.tabs-out+.btn-small{display:none}}
+@media (hover:none){.act kbd{display:none}}
+@media (prefers-reduced-motion:reduce){
+  .card,.act .dot{transition:none;animation:none}
+  .r-stem{stroke-dashoffset:0;animation:none}
+  .r-leaf{transform:none;animation:none}
+}

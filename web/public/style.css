@@ -96,7 +96,7 @@ section>h2{font-size:clamp(30px,4.2vw,46px);margin-bottom:14px}
 .dot-go{background:var(--pousse);color:#fff}
 .dot-rest{background:#D9D9D3;color:#55575C}
 .dot-flower{background:var(--chrysbg);color:var(--chrys)}
-.soon{margin-top:26px;font-weight:600}
+.soon{margin-top:30px}
 
 /* cimetière */
 .yard{border-top:1px solid var(--trait)}
@@ -146,8 +146,7 @@ input[aria-invalid=true],select[aria-invalid=true]{border-color:#A32A22}
 /* repreneurs */
 .revive{border-top:1px solid var(--trait)}
 .revive>p{color:var(--gris)}
-#revive{display:grid;gap:18px;max-width:560px;margin-top:26px}
-.ok{color:#1F5E1C;font-weight:700}
+.revive .btn{margin-top:22px}
 
 footer{border-top:1px solid var(--trait);padding:34px var(--gutter);text-align:center;color:var(--gris);font-size:15px}
 
@@ -162,8 +161,6 @@ footer{border-top:1px solid var(--trait);padding:34px var(--gutter);text-align:c
   .row2{grid-template-columns:1fr}
   .path{grid-template-columns:1fr}
   .path li::after{display:none}
-  .top nav a:not(.btn){display:none}
   .hero-tomb{max-width:320px}
 }
 @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}.btn{transition:none}}
-.done[hidden],.ok[hidden],.proof[hidden]{display:none}

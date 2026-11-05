@@ -14,20 +14,12 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Gloock&family=Schibsted+Grotesk:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/app.css">
 </head>
 <body>
 <a class="skip" href="#enterrer">Aller au formulaire</a>
 
-<header class="top">
-  <a class="brand" href="/" aria-label="RIP, accueil">
-    <svg width="30" height="30" viewBox="0 0 64 64" aria-hidden="true"><path d="M15 62V36a17 17 0 0 1 34 0v26z" fill="#232428"/><rect x="11" y="58" width="42" height="5" rx="1.5" fill="#1A1B1E"/><path d="M32 19.5V8" stroke="#3F8F3A" stroke-width="3.2" stroke-linecap="round"/><path d="M31.5 13.5c-2.6-6.2-9.4-7.7-14-5.6 2 5.2 8.3 8 14 5.6z" fill="#3F8F3A"/><path d="M32.5 10.5c2.6-6.2 9.4-7.7 14-5.6-2 5.2-8.3 8-14 5.6z" fill="#5DAE4E"/></svg>
-    <span>RIP</span>
-  </a>
-  <nav aria-label="Principal">
-    <a href="#cimetiere">Le cimetière</a>
-    <a href="#enterrer" class="btn btn-small">Enterrer un projet</a>
-  </nav>
-</header>
+<header class="top" id="top"></header>
 
 <main>
   <section class="hero">
@@ -37,7 +29,7 @@
       <p class="lede">Enterre ton projet abandonné. Quelqu'un le ressuscitera, avec toi si tu le veux.</p>
       <div class="cta">
         <a class="btn btn-go" href="#enterrer">Enterrer mon projet</a>
-        <a class="btn btn-ghost" href="#ressusciter">Je cherche un projet à ressusciter</a>
+        <a class="btn btn-ghost" href="/cimetiere">Je cherche un projet à ressusciter</a>
       </div>
       <p class="proof" id="proof" hidden></p>
     </div>
@@ -74,10 +66,10 @@
     <h2 id="g-t">Trois gestes, comme sur Tinder</h2>
     <ul>
       <li><span class="dot dot-go"><svg viewBox="0 0 24 24"><path d="M7 20h10M10 20c5.5-2.5.8-6.4 3-10M9.5 9.4c1.1.8 1.8 2.2 2.3 3.7-2 .4-3.5.4-4.8-.3-1.2-.6-2.3-1.9-3-4.2 2.8-.5 4.4 0 5.5.8zm4.8-3.9c1.8-.4 3.7-.1 5.2.9-.4 2.2-1.4 3.4-2.7 4-1 .5-2.2.5-3.6.1.1-1.8.6-3.7 1.1-5z"/></svg></span><div><b>Ressusciter</b><span>glisser à droite : je veux reprendre ce projet</span></div></li>
-      <li><span class="dot dot-rest"><svg viewBox="0 0 24 24"><path d="M18 12.8A7 7 0 1 1 11.2 6a5.5 5.5 0 0 0 6.8 6.8z"/></svg></span><div><b>Laisser reposer</b><span>glisser à gauche : pas pour moi</span></div></li>
-      <li><span class="dot dot-flower"><svg viewBox="0 0 24 24"><circle cx="12" cy="9" r="2.2"/><path d="M12 6.8V5a2 2 0 1 1 2 2M9.8 9H8a2 2 0 1 1 2 2M14.2 9H16a2 2 0 1 0-2 2M12 11.2V13M12 13c-3 0-4 1.5-4 3v4h8v-4c0-1.5-1-3-4-3z"/></svg></span><div><b>Déposer une fleur</b><span>glisser vers le haut : je soutiens, je garde en favori</span></div></li>
+      <li><span class="dot dot-rest"><svg viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9"/><path d="M20 3v4"/><path d="M22 5h-4"/></svg></span><div><b>Laisser reposer</b><span>glisser à gauche : pas pour moi</span></div></li>
+      <li><span class="dot dot-flower"><svg viewBox="0 0 24 24"><path d="M12 5a3 3 0 1 1 3 3m-3-3a3 3 0 1 0-3 3m3-3v1M9 8a3 3 0 1 0 3 3M9 8h1m5 0a3 3 0 1 1-3 3m3-3h-1m-2 3v-1"/><circle cx="12" cy="8" r="2"/><path d="M12 10v12"/><path d="M12 22c4.2 0 7-1.667 7-5-4.2 0-7 1.667-7 5Z"/><path d="M12 22c-4.2 0-7-1.667-7-5 4.2 0 7 1.667 7 5Z"/></svg></span><div><b>Déposer une fleur</b><span>glisser vers le haut : je soutiens, je garde en favori</span></div></li>
     </ul>
-    <p class="soon">L'app à swiper arrive. Pour l'instant, on remplit le cimetière.</p>
+    <a class="btn btn-go soon" href="/cimetiere">Entrer dans le cimetière</a>
   </section>
 
   <section id="cimetiere" class="yard" aria-labelledby="y-t">
@@ -89,7 +81,7 @@
   <section id="enterrer" class="bury" aria-labelledby="b-t">
     <div class="bury-head">
       <h2 id="b-t">Enterre ton projet</h2>
-      <p>Cinq minutes. Gratuit pour toujours : ce sont les créateurs qui remplissent le cimetière. Ton e-mail reste privé.</p>
+      <p>Cinq minutes. Gratuit pour toujours : ce sont les créateurs qui remplissent le cimetière. Un compte t'est demandé à la fin : c'est lui qui te permet de choisir qui reprend ton projet.</p>
     </div>
 
     <div class="bury-grid">
@@ -149,12 +141,7 @@
           <span class="err" data-for="will"></span>
         </fieldset>
 
-        <label class="f">Ton e-mail <small>(privé, pour te prévenir quand l'app ouvre)</small>
-          <input name="email" type="email" required autocomplete="email" placeholder="toi@exemple.com">
-          <span class="err" data-for="email"></span>
-        </label>
-
-        <label class="check"><input type="checkbox" name="consent"> Tu peux afficher ma tombe dans le cimetière public (jamais mon e-mail).</label>
+        <label class="check"><input type="checkbox" name="consent"> Publier ma tombe : elle apparaît dans le cimetière et les repreneurs peuvent la swiper. Mon e-mail reste privé.</label>
 
         <input class="hp" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
 
@@ -178,26 +165,15 @@
 
     <div class="done" id="done" hidden>
       <h3 class="engr">Ta tombe est creusée</h3>
-      <p>Merci. Elle repose maintenant au cimetière. Tu seras prévenu par e-mail dès que les repreneurs pourront la swiper.</p>
-      <a class="btn btn-ghost" href="#cimetiere">Voir le cimetière</a>
+      <p id="done-text"></p>
+      <a class="btn btn-ghost" href="/mes-tombes">Voir mes tombes</a>
     </div>
   </section>
 
   <section id="ressusciter" class="revive" aria-labelledby="r-t">
     <h2 id="r-t">Tu cherches un projet à ressusciter ?</h2>
-    <p>Laisse ton e-mail : tu seras le premier prévenu quand l'app à swiper ouvre.</p>
-    <form id="revive" novalidate>
-      <label class="f">Ton e-mail
-        <input name="email" type="email" required autocomplete="email" placeholder="toi@exemple.com">
-      </label>
-      <label class="f">Ce que tu sais faire <small>(facultatif)</small>
-        <input name="skills" maxlength="200" placeholder="Dev web, design, marketing…">
-      </label>
-      <input class="hp" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
-      <button class="btn btn-go" type="submit">Me prévenir</button>
-      <p class="form-err" id="revive-err" role="alert"></p>
-      <p class="ok" id="revive-ok" hidden>C'est noté. Tu seras prévenu.</p>
-    </form>
+    <p>Parcours les tombes, garde celles qui te parlent et écris au créateur de celle que tu veux reprendre.</p>
+    <a class="btn btn-go" href="/cimetiere">Entrer dans le cimetière</a>
   </section>
 </main>
 
@@ -205,6 +181,6 @@
   <p><b>RIP</b>, Reprise Immédiate Possible. Un projet qui s'arrête n'est pas forcément un projet fini.</p>
 </footer>
 
-<script src="/app.js" defer></script>
+<script type="module" src="/app.js"></script>
 </body>
 </html>

@@ -13,16 +13,17 @@ conversations Claude Code.
 | --- | --- | --- | --- | --- |
 | 0. Idée et plan illustré | 2026-11-03 | 10:28 → 10:47 | ~19 min | Concept, étude de marché, plan en 11 planches, journal + dépôt GitHub |
 | 0b. Renommage en RIP | 2026-11-03 | 10:49 → 10:53 | ~4 min | Nom officiel « RIP », planches et document mis à jour |
-| 1. Site web : accueil + « Enterre ton projet » | 2026-11-03 | 10:55 → 11:04 | ~9 min | Site Cloudflare + base Neon en ligne et testé : https://rip.ichigo35.workers.dev (**en attente de la confirmation de l'utilisateur**) |
+| 1. Site web : accueil + « Enterre ton projet » | 2026-11-03 | 10:55 → 11:04 | ~9 min | Site Cloudflare + base Neon en ligne et testé : https://rip.ichigo35.workers.dev (confirmé par l'utilisateur le 2026-11-05) |
+| 2. Comptes, swipe, match | 2026-11-05 | 08:53 → 09:23 | ~30 min | Comptes, cimetière à swiper, file du créateur, écran « Il revit ! », en ligne et testé (**en attente de la confirmation de l'utilisateur**) |
 
-**Total au 2026-11-03 11:05 : 37 minutes** entre la première demande (10:28) et le site en ligne. Modèle : Opus 5.5 (effort élevé) jusqu'à 10:48, puis Sonnet 5.5 (effort moyen) à partir de 10:48, changement fait par l'utilisateur.
+**Total au 2026-11-05 09:23 : environ 1 h 07 de travail** (37 min le 3 novembre, 30 min le 5 novembre). Modèles : Opus 5.5 (effort élevé) jusqu'au 3 novembre 10:48, Sonnet 5.5 (effort moyen) jusqu'à la fin de la phase 1, changement fait par l'utilisateur, puis Opus 5.5 pour la phase 2.
 
-## État actuel (2026-11-03 11:05)
+## État actuel (2026-11-05 09:23)
 
-- Phase 0 et phase 1 terminées ; **la phase 1 attend la confirmation de l'utilisateur** avant de passer à la phase 2.
-- Phase 2 proposée (pas commencée) : comptes, swipe sur les tombes, match.
-- Décisions ouvertes : domaine et marque RIP, renommer le dossier local, interface en anglais en plus du français, premiers projets à enterrer.
-- Dernier commit poussé avant cette mise à jour : `f2e0bdd`.
+- Phases 0, 1 et 2 terminées ; **la phase 2 attend la confirmation de l'utilisateur** avant de passer à la suite.
+- Le site est en ligne et fonctionne de bout en bout, mais le cimetière est vide : aucune vraie tombe pour l'instant.
+- Phase 3 proposée (pas commencée) : la veillée (messagerie de 14 jours) et le signalement.
+- Décisions ouvertes : domaine et marque RIP (qui débloque aussi les e-mails), renommer le dossier local, interface en anglais en plus du français, premiers projets à enterrer.
 
 ---
 
@@ -196,3 +197,92 @@ et une liste d'attente pour les repreneurs. Pas encore de swipe ni de match (pha
 
 Cloudflare Workers + assets statiques (`wrangler.jsonc`), Neon Postgres 17, `@neondatabase/serverless`,
 TypeScript, Playwright + Chrome pour les tests, polices Gloock et Schibsted Grotesk.
+
+
+---
+
+## Phase 2 — Comptes, swipe, match (2026-11-05)
+
+### La demande (mots de l'utilisateur, 08:53)
+
+> « poursuis etape suivante »
+
+Ce message vaut confirmation de la phase 1 et feu vert pour la phase 2.
+
+### Périmètre choisi (Claude)
+
+Celui proposé à la fin de la phase 1 : comptes, swipe sur les tombes, match. Le créateur choisit parmi les personnes qui veulent reprendre son projet ; le match annonce « Il revit ! ». La veillée (messagerie de 14 jours) reste pour la phase suivante.
+
+### Chronologie
+
+| Heure | Étape | Outils |
+| --- | --- | --- |
+| 08:53 | Feu vert de l'utilisateur | Claude Code |
+| 08:54 | Relecture du journal, du plan (document Claude Docs), du code et de la base | Bash, Claude Docs, MCP Neon |
+| 08:56 | Projet Stitch « RIP » retrouvé : le design system existe, mais aucun écran, la génération de la phase 1 n'avait rien laissé | MCP Stitch |
+| 08:57 | 3 maquettes lancées en parallèle (Cimetière, Mes tombes, Il revit !), **reçues 2 min 30 plus tard** | MCP Stitch |
+| 09:00 | Relecture des maquettes : on garde la composition, on retire ce que Stitch a inventé | Claude |
+| 09:02 | Migration de la base : tables `users`, `sessions`, `auth_attempts`, `swipes`, `matches`, colonne `burials.user_id` (`web/db/0002_comptes_swipe_match.sql`) | MCP Neon |
+| 09:02 | API : comptes et sessions (`web/src/auth.ts`), pile, gestes, annulation, file du créateur, match atomique (`web/src/index.ts`) | TypeScript, Workers |
+| 09:05 | Pages : `cimetiere`, `mes-tombes`, `reprises`, `profil`, socle commun `lib.js`, style `app.css`, en-têtes de sécurité `_headers`, accueil rebranché sur les comptes | HTML/CSS/JS sans framework |
+| 09:11 | Test de l'API avec 4 puis 5 comptes (`web/tests/parcours.mjs`) : 82 contrôles, dont les abus | Node.js, wrangler dev |
+| 09:12 | Parcours réel dans Chrome (bureau et iPhone émulé) : souris, clavier, doigt, 27 captures | Playwright |
+| 09:14 | Corrections après relecture des captures (voir « Moments à garder ») | CSS, JS |
+| 09:19 | Réponse propre si la base est injoignable ; 82 contrôles de nouveau au vert | TypeScript |
+| 09:19 | Déploiement sur https://rip.ichigo35.workers.dev | wrangler |
+| 09:20 | `burials.user_id` passe en `NOT NULL` (après le déploiement, pour ne pas casser l'ancien code encore en ligne) | MCP Neon |
+| 09:20 | Parcours Chrome complet **sur le site en ligne** : aucun problème, base revenue à zéro | Playwright |
+| 09:21 | Clôture : journal, règles, mémoire, archive, commit et push | git |
+
+### Les choix faits
+
+| Choix | Qui | Pourquoi |
+| --- | --- | --- |
+| Confirmation de la phase 1, feu vert phase 2 | **Utilisateur** | « poursuis etape suivante » |
+| Périmètre : comptes + swipe + match, sans la veillée | Claude, proposé en fin de phase 1 | Boucler le cœur de l'app avant la messagerie |
+| Connexion par e-mail + mot de passe (le plan prévoyait lien e-mail, GitHub ou Google) | Claude | Pas de domaine, donc pas d'envoi d'e-mail ; GitHub et Google demandent des clés que seul l'utilisateur peut créer. À revoir dès qu'un domaine existe |
+| Mots de passe en PBKDF2, 100 000 itérations, même méthode que Leads Immo | Claude | Le maximum accepté par les Workers ; verrou après 10 échecs en 15 minutes |
+| Session dans un cookie HttpOnly, seule son empreinte en base | Claude | Une fuite de la base ne donne pas accès aux comptes |
+| Visite du cimetière sans compte, compte demandé au premier geste | Claude | Voir avant de s'engager ; le plan veut qu'une tombe s'ouvre sans friction |
+| Compte demandé après le formulaire d'enterrement, pas avant | Claude | Rien de ce qui est saisi n'est perdu |
+| Mot au créateur obligatoire pour ressusciter (10 caractères au moins) | Plan de la phase 0, appliqué par Claude | « Ressusciter = un mot au créateur » : le créateur choisit à partir de ce message |
+| Une seule reprise à la fois par tombe, garantie par la base | Claude, d'après le plan | La tombe quitte le cimetière pendant la reprise ; deux acceptations simultanées ne peuvent pas passer |
+| Accepter et décliner demandent une confirmation | Claude | Ces deux gestes sont définitifs pour l'instant |
+| Annuler le dernier geste pendant 6 secondes, revoir les tombes au repos | Claude | Un mauvais swipe ne doit pas être définitif |
+| E-mails jamais échangés au match, même si la messagerie n'existe pas encore | Claude | La promesse « ton e-mail reste privé » tient ; la veillée viendra à la place |
+| Liste d'attente des repreneurs retirée de l'accueil, table conservée | Claude | Elle n'a plus d'objet une fois le cimetière ouvert ; rien n'est supprimé en base |
+| Stitch utilisé cette fois, avec le design system du projet ; polices et couleurs du site conservées | Règle de l'utilisateur + Claude | Stitch ne propose pas Gloock ; la charte déjà en ligne reste la référence |
+| Aucune fausse tombe dans le cimetière en ligne | Claude | Les fausses tombes sont un risque identifié au plan ; les premières tombes viendront de l'utilisateur |
+| Reporté : filtres, quota de 20 swipes par jour, signalement, suppression de compte, connexion GitHub/Google, e-mails, Médium, captures sur les tombes | Claude | Hors du périmètre de la phase ; le signalement est à faire avant d'ouvrir au public |
+
+### Moments à garder pour la vidéo
+
+- **Stitch fonctionne enfin** : en phase 1 il avait expiré sans rien rendre ; cette fois, 3 écrans en 2 min 30. Maquettes dans `plan/stitch/`.
+- Stitch a brodé : étoiles GitHub, « Crypte active, concessionnaire connecté », « Registre des défunts numériques », filigrane « REQUIESCAT ». Tout a été retiré, pour ne garder que la composition.
+- **La protection a arrêté son propre test** : à force de relancer les essais, le site a refusé de nouveaux comptes (« Trop de comptes créés depuis cette connexion »). Le verrou marchait ; c'est le nettoyage du test qui visait la mauvaise adresse locale.
+- Un des 82 contrôles était faux : il affirmait vérifier « plus de swipe sur une tombe en reprise » sans le tester. Repéré à la relecture et réécrit.
+- L'icône de fleur de la phase 1 était illisible à grande taille : remplacée par la vraie icône Lucide.
+- La pierre de derrière apparaissait coupée net quand on tirait la carte : corrigé.
+- **Le vrai bug trouvé par la capture** : sur iPhone (écran utile de 664 px), une tombe normale cachait les boutons, et la carte captait le doigt, donc on ne pouvait plus faire défiler. Mise en page resserrée, boutons toujours visibles, défilement rendu quand la tombe dépasse l'écran.
+- Signature visuelle : la pousse grandit sur la pierre quand on la tire vers « Ressusciter », puis elle sort de la pierre sur l'écran « Il revit ! ».
+
+### Résultat
+
+- En ligne : https://rip.ichigo35.workers.dev (accueil), `/cimetiere`, `/mes-tombes`, `/reprises`, `/profil`.
+- Tests : 82 contrôles d'API au vert (`node tests/parcours.mjs` depuis `web/`, avec `npx wrangler dev` lancé) ; parcours complet dans Chrome, bureau et iPhone émulé, en local puis sur le site en ligne : aucune erreur console, aucun débordement. Pas encore essayé sur un vrai téléphone.
+- Base : toutes les données de test supprimées (0 compte, 0 tombe).
+- Captures pour la vidéo : `plan/captures/phase-2/`, maquettes : `plan/stitch/`.
+
+### Limites connues à ce stade
+
+- Pas de mot de passe oublié ni de vérification de l'adresse e-mail : il faut un domaine pour envoyer des e-mails.
+- Aucune alerte hors du site : le créateur voit ses demandes en revenant (pastille sur Mes tombes), le repreneur découvre le match à sa prochaine visite.
+- Après un match, les deux personnes ne peuvent pas encore se parler, et la reprise ne peut pas être annulée : la tombe reste hors du cimetière en attendant la veillée.
+
+### Outils et technos
+
+Cloudflare Workers + assets statiques, Neon Postgres 17, `@neondatabase/serverless`, WebCrypto (PBKDF2, SHA-256), TypeScript, HTML/CSS/JS sans framework, événements pointeur pour le swipe, MCP Stitch, Playwright + Chrome, skill `frontend-design`, icônes Lucide.
+
+### Sources brutes
+
+- Conversation Claude Code : session `41e86b63-a2e5-4410-b916-368a4be85f78`, copie locale dans `.journal-brut/`.

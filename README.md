@@ -8,7 +8,9 @@ on swipe des pierres tombales comme sur Tinder (ressusciter, laisser reposer, d�
 
 ![RIP](plan/out/reboot-cover.jpg)
 
-- `plan/` : le plan illustré (planches générées par `plan/build.mjs`)
+- En ligne : https://rip.ichigo35.workers.dev
+- `web/` : le site (Cloudflare Workers, Neon, HTML/CSS/JS sans framework)
+- `plan/` : le plan illustré (planches générées par `plan/build.mjs`), maquettes Stitch et captures
 - `JOURNAL.md` : le journal de bord de la création, étape par étape
 
 Icônes : [Lucide](https://lucide.dev) (licence ISC).
