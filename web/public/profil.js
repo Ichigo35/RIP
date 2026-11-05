@@ -1,4 +1,4 @@
-import { $, api, el, field, member, showError, toast } from "/lib.js";
+import { $, api, askPassword, el, field, member, showError, toast } from "/lib.js";
 
 const me = await member("/profil", "Connecte-toi pour voir ton profil.");
 
@@ -35,3 +35,17 @@ if (me.user.is_admin) {
   $("#view").append(el("p", "profile-admin"));
   $(".profile-admin").append(moderate);
 }
+
+const danger = el("section", "danger-zone");
+const remove = Object.assign(el("button", "btn btn-ghost", "Supprimer mon compte"), { type: "button" });
+remove.addEventListener("click", async () => {
+  const gone = await askPassword({
+    title: "Supprimer ton compte ?",
+    text: `Tes tombes, tes demandes, tes veillées et tes messages disparaissent, aussi pour les personnes avec qui tu parlais. C'est définitif.${me.user.is_admin ? " Tu es administrateur : plus personne ne pourra modérer." : ""}`,
+    ok: "Supprimer définitivement",
+    submit: (password) => api("/api/account/delete", { password }),
+  });
+  if (gone) location.href = "/";
+});
+danger.append(el("h2", null, "Supprimer mon compte"), el("p", "sub", "Tout ce que tu as déposé sur RIP disparaît avec lui."), remove);
+$("#view").append(danger);

@@ -46,11 +46,12 @@ const notAvailable = () => json({ error: "Cette tombe n'est plus disponible." },
 
 async function graveyard(sql: Sql) {
   const [rows, counts] = await Promise.all([
-    sql`SELECT b.name, b.year_start, b.year_end, b.epitaph, b.cause, b.will, b.legacy, b.missing,
+    sql`SELECT b.name, b.year_start, b.year_end, b.epitaph, b.cause, b.will, b.legacy, b.missing, b.is_example AS example,
                CASE WHEN m.revived_at IS NOT NULL THEN 'risen' WHEN m.id IS NOT NULL THEN 'vigil' END AS state
         FROM burials b LEFT JOIN matches m ON m.burial_id = b.id AND m.ended_at IS NULL
-        WHERE b.consent AND b.hidden_at IS NULL ORDER BY b.created_at DESC LIMIT 12`,
-    sql`SELECT (SELECT count(*) FROM burials)::int AS burials, (SELECT count(*) FROM users)::int AS users`,
+        WHERE b.consent AND b.hidden_at IS NULL ORDER BY b.is_example, b.created_at DESC, b.name LIMIT 12`,
+    sql`SELECT (SELECT count(*) FROM burials WHERE NOT is_example)::int AS burials,
+               (SELECT count(*) FROM users WHERE email NOT LIKE '%@rip.invalid')::int AS users`,
   ]);
   return json({ tombs: rows, ...counts[0] });
 }
@@ -59,7 +60,7 @@ async function graveyard(sql: Sql) {
 async function deck(sql: Sql, user: User | null) {
   const me = user?.id ?? null;
   const rows = await sql`
-    SELECT b.id, b.name, b.year_start, b.year_end, b.epitaph, b.cause, b.will, b.legacy, b.missing,
+    SELECT b.id, b.name, b.year_start, b.year_end, b.epitaph, b.cause, b.will, b.legacy, b.missing, b.is_example AS example,
            (SELECT count(*) FROM swipes f WHERE f.burial_id = b.id AND f.action = 'flower')::int AS flowers,
            count(*) OVER ()::int AS total
     FROM burials b
@@ -67,7 +68,7 @@ async function deck(sql: Sql, user: User | null) {
       AND (${me}::uuid IS NULL OR b.user_id <> ${me}::uuid)
       AND NOT EXISTS (SELECT 1 FROM swipes s WHERE s.burial_id = b.id AND s.user_id = ${me}::uuid)
       AND NOT EXISTS (SELECT 1 FROM matches m WHERE m.burial_id = b.id AND m.ended_at IS NULL)
-    ORDER BY b.created_at DESC LIMIT 20`;
+    ORDER BY b.is_example, b.created_at DESC, b.name LIMIT 20`;
   const rested = me ? await sql`SELECT count(*)::int AS n FROM swipes WHERE user_id = ${me} AND action = 'rest'` : [{ n: 0 }];
   return json({ tombs: rows, total: rows[0]?.total ?? 0, rested: rested[0].n });
 }
@@ -96,7 +97,7 @@ async function myTombs(sql: Sql, user: User) {
 
 async function reprises(sql: Sql, user: User) {
   const rows = await sql`
-    SELECT b.id, b.name, b.year_start, b.year_end, b.epitaph, s.action, s.note, s.decision,
+    SELECT b.id, b.name, b.year_start, b.year_end, b.epitaph, b.is_example AS example, s.action, s.note, s.decision,
            m.id AS match_id, m.ended_at, m.revived_at, c.name AS creator_name,
            greatest(ceil(extract(epoch FROM m.ends_at - now()) / 86400), 0)::int AS days_left,
            (SELECT count(*) FROM messages x WHERE x.match_id = m.id AND x.sender_id <> ${user.id} AND x.created_at > m.reviver_read_at)::int AS unread,
@@ -203,6 +204,7 @@ async function swipe(sql: Sql, user: User, body: Record<string, unknown>) {
     INSERT INTO swipes (user_id, burial_id, action, note)
     SELECT ${user.id}::uuid, b.id, ${action}::text, ${note}::text FROM burials b
     WHERE b.id = ${tombId} AND b.consent AND b.hidden_at IS NULL AND b.user_id <> ${user.id}
+      AND NOT (b.is_example AND ${action}::text = 'revive')
       AND NOT EXISTS (SELECT 1 FROM matches m WHERE m.burial_id = b.id AND m.ended_at IS NULL)
     ON CONFLICT (user_id, burial_id) DO UPDATE SET action = EXCLUDED.action, note = EXCLUDED.note, created_at = now()
     WHERE swipes.decision IS NULL
@@ -252,6 +254,24 @@ async function decide(sql: Sql, user: User, body: Record<string, unknown>) {
     SELECT c.id, b.name AS tomb, u.name AS reviver FROM created c, burials b, users u
     WHERE b.id = ${tombId} AND u.id = ${reviverId}`;
   return rows[0] ? json({ match: rows[0] }, 201) : json({ error: "Cette demande n'est plus disponible." }, 409);
+}
+
+/** Supprime le compte et, par cascade, ses tombes, gestes, veillées et messages. */
+async function deleteAccount(req: Request, sql: Sql, user: User, body: Record<string, unknown>) {
+  const password = typeof body.password === "string" ? body.password.slice(0, 200) : "";
+  const key = `login:${user.email}`;
+  if (await tooManyFailures(sql, [key])) return json({ error: "Trop d'essais. Réessaie dans 15 minutes." }, 429);
+  const rows = await sql`SELECT password_hash FROM users WHERE id = ${user.id}`;
+  if (!(await verifyPassword(password, rows[0].password_hash))) {
+    await recordFailure(sql, [key]);
+    return json({ error: "Mot de passe incorrect.", field: "password" }, 403);
+  }
+  const expired = await closeSession(req, sql);
+  await sql.transaction([
+    sql`DELETE FROM users WHERE id = ${user.id}`,
+    sql`DELETE FROM auth_attempts WHERE key = ${key}`,
+  ]);
+  return json({ ok: true }, 200, { "set-cookie": expired });
 }
 
 async function saveProfile(sql: Sql, user: User, body: Record<string, unknown>) {
@@ -304,6 +324,7 @@ async function route(req: Request, env: Env): Promise<Response> {
   }
   if (path === "/api/requests/decide") return decide(sql, user, body);
   if (path === "/api/profile") return saveProfile(sql, user, body);
+  if (path === "/api/account/delete") return deleteAccount(req, sql, user, body);
   if (path === "/api/vigil/message") return sendMessage(sql, user, body);
   if (path === "/api/vigil/read") return markRead(sql, user, body);
   if (path === "/api/vigil/end") return endVigil(sql, user, body);

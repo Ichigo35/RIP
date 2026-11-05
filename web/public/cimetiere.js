@@ -49,7 +49,7 @@ function cardEl(t) {
   flag.title = "Signaler cette tombe";
   flag.insertAdjacentHTML("beforeend", '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><path d="M4 22v-7"/></svg>');
   flag.addEventListener("click", () => signal(t));
-  tomb.append(flag);
+  if (!t.example) tomb.append(flag);
   card.append(stamp("stamp-go", "Ressusciter"), stamp("stamp-rest", "Laisser reposer"), stamp("stamp-flower", "Une fleur"), tomb, el("div", "plinth"));
   drag(card);
   return card;
@@ -182,8 +182,11 @@ async function act(action) {
     return;
   }
 
+  /* Une tombe d'exemple n'a personne pour répondre : le geste part, aucune demande ne se crée. */
+  const demo = t.example && action === "revive";
+  const sent = demo ? "rest" : action;
   let extra = {};
-  if (action === "revive") {
+  if (action === "revive" && !demo) {
     settle(card);
     const answer = await askNote(t, me);
     if (!answer) return;
@@ -192,7 +195,7 @@ async function act(action) {
   }
 
   busy = true;
-  const sending = api("/api/swipes", { tombId: t.id, action, ...extra });
+  const sending = api("/api/swipes", { tombId: t.id, action: sent, ...extra });
   if (!calm) {
     card.classList.add("leaving", `leaving-${action}`);
     card.style.transform = FLIGHT[action];
@@ -206,9 +209,9 @@ async function act(action) {
   }
   queue.shift();
   total -= 1;
-  if (action === "rest") rested += 1;
+  if (sent === "rest") rested += 1;
   render();
-  toast(DONE[action](t.name), { label: "Annuler", run: () => undo(t, action) });
+  toast(demo ? `${t.name} est une tombe d'exemple : aucune demande n'est partie.` : DONE[action](t.name), { label: "Annuler", run: () => undo(t, sent) });
 }
 
 async function signal(t) {

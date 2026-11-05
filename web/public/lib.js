@@ -34,6 +34,7 @@ export const plural = (n, word) => `${n} ${word}${n > 1 ? "s" : ""}`;
 export function tombFace(t, heading = "h3") {
   const tomb = el("div", "tomb");
   tomb.insertAdjacentHTML("beforeend", SPROUT);
+  if (t.example) tomb.append(el("p", "sample", "Tombe d'exemple"));
   tomb.append(el(heading, "engr", t.name), el("p", "dates", dates(t.year_start, t.year_end)), el("p", "epitaph", `« ${t.epitaph} »`));
   return tomb;
 }
@@ -288,6 +289,28 @@ export function askReport({ title, text, reasons }) {
     d.close();
   });
   return opened(d, () => answer);
+}
+
+/** Demande le mot de passe avant un geste définitif ; `submit` rend { ok, data }, le dialogue reste ouvert en cas d'erreur. */
+export function askPassword({ title, text, ok, submit }) {
+  let done = false;
+  const d = sheet(title, text);
+  const form = el("form", "sheet-form");
+  form.noValidate = true;
+  const button = Object.assign(el("button", "btn btn-danger btn-big", ok), { type: "submit" });
+  form.append(field("Ton mot de passe", { name: "password", type: "password", autocomplete: "current-password", required: true }), button, el("p", "form-err"));
+  d.append(form);
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    clearErrors(form);
+    button.disabled = true;
+    const result = await submit(form.elements.password.value);
+    button.disabled = false;
+    if (!result.ok) return showError(form, result.data);
+    done = true;
+    d.close();
+  });
+  return opened(d, () => done);
 }
 
 /** L'écran « Il revit ! », repris pour annoncer qu'une tombe est ressuscitée. */

@@ -31,6 +31,8 @@ async function loadYard() {
     const proof = $("#proof");
     proof.textContent = `${plural(data.burials, "projet")} déjà enterré${data.burials > 1 ? "s" : ""}.`;
     proof.hidden = false;
+  } else if (data.tombs.length) {
+    $("#yard-sub").textContent = "Ces tombes sont des exemples. La première vraie tombe peut être la tienne.";
   }
 }
 

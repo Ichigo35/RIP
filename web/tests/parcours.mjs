@@ -76,6 +76,28 @@ async function run() {
   const [pub, priv, second] = [byName("Publique"), byName("Privée"), byName("Seconde")];
   check("3 tombes chez Ana", mine.length === 3, mine.length);
 
+  // tombes d'exemple : visibles, marquées, jamais comptées, et personne n'attend de réponse
+  const demoDeck = (await anon("/api/deck")).data.tombs;
+  const demo = demoDeck.find((t) => t.example);
+  check("les tombes d'exemple sont dans la pile", demoDeck.filter((t) => t.example).length === 5, demoDeck.length);
+  check("les vraies tombes passent devant", demoDeck.findIndex((t) => t.example) > demoDeck.findLastIndex((t) => !t.example));
+  const realCount = (await sql`SELECT count(*)::int AS n FROM burials WHERE NOT is_example`)[0].n;
+  check("les exemples ne comptent pas", (await anon("/api/graveyard")).data.burials === realCount, realCount);
+  const memberCount = (await sql`SELECT count(*)::int AS n FROM users`)[0].n - 1;
+  check("le gardien ne compte pas parmi les membres", (await anon("/api/graveyard")).data.users === memberCount, memberCount);
+  check("ressusciter un exemple = 409", (await bob("/api/swipes", { tombId: demo.id, action: "revive", note: "Je veux le reprendre." })).status === 409);
+  check("aucune demande créée", !(await bob("/api/reprises")).data.items.some((i) => i.id === demo.id));
+  check("un exemple se laisse reposer", (await bob("/api/swipes", { tombId: demo.id, action: "rest" })).status === 201);
+  await bob("/api/swipes/undo", { tombId: demo.id });
+  check("un exemple se fleurit", (await bob("/api/swipes", { tombId: demo.id, action: "flower" })).status === 201);
+  check("la fleur est marquée exemple", (await bob("/api/reprises")).data.items.find((i) => i.id === demo.id)?.example === true);
+  check("une fleur d'exemple ne devient pas une demande", (await bob("/api/swipes", { tombId: demo.id, action: "revive", note: "Je veux le reprendre." })).status === 409);
+  await bob("/api/swipes/undo", { tombId: demo.id });
+  await bob("/api/reports", { kind: "tomb", tombId: demo.id, reason: "fake" });
+  check("un exemple ne se signale pas", (await sql`SELECT count(*)::int AS n FROM reports WHERE burial_id = ${demo.id}`)[0].n === 0);
+  await bob("/api/swipes/undo", { tombId: demo.id });
+  check("le gardien ne peut pas se connecter", (await client()("/api/login", { email: "gardien@rip.invalid", password: "disabled-disabled" })).status === 401);
+
   // la pile
   const bobDeck = await deckIds(bob);
   check("Bob voit les tombes publiques", bobDeck.includes(pub.id) && bobDeck.includes(second.id));
@@ -262,7 +284,7 @@ async function run() {
 
   // signaler une personne dans une veillée
   check("Cam ne peut pas signaler dans une veillée étrangère", (await cam("/api/reports", { kind: "person", matchId, reason: "scam" })).status === 201
-    && (await sql`SELECT count(*)::int AS n FROM reports WHERE kind = 'person'`)[0].n === 0);
+    && (await sql`SELECT count(*)::int AS n FROM reports r JOIN users u ON u.id = r.reporter_id WHERE r.kind = 'person' AND u.email LIKE '%@example.com'`)[0].n === 0);
   check("Ana signale Bob", (await ana("/api/reports", { kind: "person", matchId, reason: "harassment", details: "Il insiste." })).status === 201);
 
   // l'administrateur traite
@@ -327,6 +349,24 @@ async function run() {
   // déconnexion
   check("déconnexion", (await cam("/api/logout", {})).status === 200);
   check("session fermée", (await cam("/api/me")).data.user === null);
+
+  // suppression de compte : Eve a une tombe et a parlé avec Bob
+  check("supprimer sans compte = 401", (await anon("/api/account/delete", { password: PASSWORD })).status === 401);
+  check("supprimer depuis un autre site = 403", (await eve("/api/account/delete", { password: PASSWORD }, { origin: "https://exemple-pirate.com" })).status === 403);
+  check("mauvais mot de passe = 403", (await eve("/api/account/delete", { password: "pas-le-bon-mot-de-passe" })).status === 403);
+  check("rien n'est supprimé", (await eve("/api/me")).data.user?.name === "Eve");
+  await gina("/api/swipes", { tombId: eveTomb.id, action: "flower" }).catch(() => {});
+  const gone = await eve("/api/account/delete", { password: PASSWORD });
+  check("compte supprimé", gone.status === 200, gone.data);
+  check("le cookie est effacé", /Max-Age=0/.test(gone.setCookie), gone.setCookie);
+  check("la session est fermée", (await eve("/api/me")).data.user === null);
+  const leftovers = await sql`SELECT (SELECT count(*) FROM burials WHERE id = ${eveTomb.id})::int AS tombs,
+                                     (SELECT count(*) FROM matches WHERE id = ${eveMatch.data.match.id})::int AS matches,
+                                     (SELECT count(*) FROM swipes WHERE burial_id = ${eveTomb.id})::int AS swipes,
+                                     (SELECT count(*) FROM auth_attempts WHERE key = ${`login:${email("eve")}`})::int AS attempts`;
+  check("ses données sont parties", Object.values(leftovers[0]).every((n) => n === 0), leftovers[0]);
+  check("connexion impossible", (await client()("/api/login", { email: email("eve"), password: PASSWORD })).status === 401);
+  check("l'e-mail est de nouveau libre", (await client()("/api/signup", { name: "Eve", email: email("eve"), password: PASSWORD })).status === 201);
 
   // brute force, en dernier : bloque cette adresse pour 15 minutes
   const guess = client();

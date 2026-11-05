@@ -30,7 +30,7 @@ export async function report(sql: Sql, user: User, body: Record<string, unknown>
   await sql`
     INSERT INTO reports (reporter_id, kind, burial_id, reason, details)
     SELECT ${user.id}::uuid, 'tomb', b.id, ${reason}::text, ${details}::text FROM burials b
-    WHERE b.id = ${tombId} AND b.consent AND b.hidden_at IS NULL AND b.user_id <> ${user.id}
+    WHERE b.id = ${tombId} AND b.consent AND b.hidden_at IS NULL AND NOT b.is_example AND b.user_id <> ${user.id}
     ON CONFLICT DO NOTHING`;
   await sql`
     UPDATE burials SET hidden_at = now() WHERE id = ${tombId} AND hidden_at IS NULL
